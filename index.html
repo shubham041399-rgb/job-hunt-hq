@@ -6,11 +6,44 @@
 <title>Shubham's Job Hunt HQ</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
-<script src="https://cdn.tailwindcss.com"></script>
-<script>tailwind.config={theme:{extend:{colors:{bg:'#0D1117',card:'#161B22',line:'#21262D',acc:'#00FF94',amb:'#F4A623',mut:'#8B949E'},fontFamily:{disp:['Space Grotesk','sans-serif'],body:['Inter','sans-serif'],mono:['JetBrains Mono','monospace']}}}}</script>
+<script>tailwind.config={theme:{extend:{colors:{bg:'#0D1117',card:'#161B22',line:'#21262D',acc:'#00FF94',amb:'#F4A623',mut:'#8B949E'},fontFamily:{disp:['Space Grotesk','sans-serif'],body:['Inter','sans-serif'],mono:['JetBrains Mono','monospace']}}}}}</script>
+<style>
+  html,body{background:#0D1117;color:#E6EDF3;font-family:Inter,sans-serif;-webkit-tap-highlight-color:transparent}
+  ::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-thumb{background:#21262D;border-radius:3px}
+  .inp{width:100%;background:#0D1117;border:1px solid #21262D;border-radius:10px;padding:10px 12px;font-size:14px;color:#E6EDF3;outline:none;transition:border .15s}
+  .inp:focus{border-color:#00FF94}
+  .inp::placeholder{color:#484F58}
+  select.inp{appearance:none}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:10px;font-weight:600;font-size:14px;padding:10px 16px;cursor:pointer;border:1px solid transparent;transition:all .15s;user-select:none}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .btn-p{background:#00FF94;color:#04130B}.btn-p:not(:disabled):hover{filter:brightness(1.1)}
+  .btn-a{background:rgba(244,166,35,.12);color:#F4A623;border-color:rgba(244,166,35,.35)}.btn-a:not(:disabled):hover{background:rgba(244,166,35,.2)}
+  .btn-g{background:transparent;color:#8B949E;border-color:#21262D}.btn-g:not(:disabled):hover{color:#E6EDF3;border-color:#8B949E}
+  .btn-d{background:rgba(248,81,73,.12);color:#F85149;border-color:rgba(248,81,73,.35)}
+  .btn-sm{padding:6px 10px;font-size:12px;border-radius:8px}
+  .out{white-space:pre-wrap;background:#0D1117;border:1px solid #21262D;border-radius:10px;padding:14px;font-size:13.5px;line-height:1.6;margin-top:10px}
+  .err{background:rgba(248,81,73,.1);border:1px solid rgba(248,81,73,.4);color:#F85149;border-radius:10px;padding:10px 12px;font-size:13px;margin-top:10px}
+  .badge{display:inline-block;font-size:11px;font-weight:600;padding:3px 9px;border-radius:99px;letter-spacing:.02em}
+  #toast{position:fixed;bottom:84px;left:50%;transform:translateX(-50%) translateY(20px);background:#161B22;border:1px solid #00FF94;color:#00FF94;padding:9px 18px;border-radius:99px;font-size:13px;font-weight:600;opacity:0;pointer-events:none;transition:all .25s;z-index:99;white-space:nowrap}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .pulse{animation:pulse 1.4s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  .screen{animation:fadein .2s ease}
+  @keyframes fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .navbtn{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0 6px;font-size:10.5px;font-weight:600;color:#8B949E;cursor:pointer;border-top:2px solid transparent}
+  .navbtn.on{color:#00FF94;border-top-color:#00FF94}
+  input[type=range]{accent-color:#00FF94;width:100%}
+  table.cmp{width:100%;border-collapse:collapse;font-size:13px}
+  table.cmp th,table.cmp td{border:1px solid #21262D;padding:8px;text-align:left}
+  table.cmp th{color:#8B949E;font-weight:600;background:#0D1117}
+</style>
 <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<div id="toast"></div>
 <script>
 const {
   useState,
@@ -2759,7 +2792,7 @@ function App() {
     className: "text-lg leading-none"
   }, ic), l))));
 }
-ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App, null));
+document.addEventListener("DOMContentLoaded",function(){ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App,null));});
 </script>
 </body>
 </html>
