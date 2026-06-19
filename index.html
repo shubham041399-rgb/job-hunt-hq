@@ -248,9 +248,8 @@ async function callAI({
     }]
   };
   if (tools) body.tools = [{
-    google_search: {}
   }];
-  const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + encodeURIComponent(apiKey);
+  const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=' + encodeURIComponent(apiKey);
   const r = await fetch(url, {
     method: 'POST',
     headers: {
@@ -284,7 +283,6 @@ function jparse(t) {
   if (s === -1 || e === -1) throw new Error('AI did not return valid JSON');
   return JSON.parse(c.slice(s, e + 1));
 }
-const WEB_SEARCH = true; // Gemini google_search grounding
 
 function useAI(db) {
   const [busy, setBusy] = useState(false);
@@ -654,7 +652,6 @@ function JobSearch({
     const text = await ai.run({
       system: 'You are a job-search agent for an Indian BFSI operations professional. Use web search to find REAL, currently open job postings (Naukri, LinkedIn, company career pages). Return ONLY a JSON array, no prose: [{"title","company","location","salary","source","url","match"}] where match is 0-100 fit vs the candidate profile. Max 8 jobs. If salary unknown use "Not disclosed". Never invent postings — only ones found via search.',
       user: `${PROFILE_PROMPT}\n\nSEARCH: role="${q.role}" location="${q.loc}" experience="${q.exp}". Find live openings now.`,
-      tools: WEB_SEARCH,
       max: 3000
     });
     if (!text) return;
@@ -1040,7 +1037,6 @@ function InterviewPrep({
     const text = await ai.run({
       system: 'Research this company with web search. Give a concise interview-prep brief: what they do, size/scale in India, culture signals, recent news (last 6 months), and 2 smart questions the candidate should ask. Plain text, under 250 words.',
       user: `Company: ${f.company}. Candidate is interviewing for: BFSI operations AM-level role.`,
-      tools: WEB_SEARCH,
       max: 2000
     });
     if (text) {
@@ -1283,7 +1279,6 @@ function SalaryCoach({
     const text = await ai.run({
       system: 'You are a salary negotiation coach for Indian BFSI. Use web search for current market data. Output sections: 1) MARKET RATE for this role/location in India (range in LPA, cite source type), 2) VERDICT: Accept / Negotiate / Reject — one blunt line with reasoning vs candidate 5+ yrs experience and 14 LPA target, 3) COUNTER-OFFER SCRIPT: exact words to say, with a specific number, 4) LEVERAGE POINTS: 3 bullets from their real achievements. Be brutally honest. Plain text.',
       user: `${PROFILE_PROMPT}\n\nOFFER: ${f.ctc} LPA for ${f.role} at ${f.company}, ${f.loc}.`,
-      tools: WEB_SEARCH,
       max: 2500
     });
     if (text) setOut(text);
@@ -1518,7 +1513,6 @@ function Research({
     const text = await ai.run({
       system: 'Research this company with web search for a BFSI ops job seeker in India. Output sections: WHAT THEY DO, SIZE & INDIA PRESENCE, CULTURE & GLASSDOOR SENTIMENT, RECENT NEWS (last 6 months), RED FLAGS (be honest — layoffs, toxic reviews, instability), VERDICT: "Should I apply?" one blunt line. Under 300 words. Plain text.',
       user: `Company: ${co}. Candidate: 5+ yrs BFSI ops, targeting AM-level roles in Delhi NCR/Pune, 14+ LPA.`,
-      tools: WEB_SEARCH,
       max: 2500
     });
     if (text) {
