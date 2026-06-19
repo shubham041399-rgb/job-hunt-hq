@@ -249,7 +249,7 @@ async function callAI({
   };
   if (tools) body.tools = [{
   }];
-  const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=' + encodeURIComponent(apiKey);
+  const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=' + encodeURIComponent(apiKey);
   const r = await fetch(url, {
     method: 'POST',
     headers: {
@@ -2371,7 +2371,7 @@ function Settings({
     placeholder: "AIza…"
   }), /*#__PURE__*/React.createElement("p", {
     className: "text-xs text-mut mt-1.5"
-  }, "Stored only in your browser's localStorage. Free key: aistudio.google.com → Get API key (starts with AIza). Free tier: ~1500 requests/day."), /*#__PURE__*/React.createElement(Btn, {
+  }, "Stored only in your browser's localStorage. Free key: aistudio.google.com → Get API key. Free tier: ~1500 requests/day."), /*#__PURE__*/React.createElement(Btn, {
     className: "w-full mt-3",
     onClick: () => {
       up(d => {
