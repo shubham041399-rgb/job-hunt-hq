@@ -231,29 +231,20 @@ async function callAI({
   max = 2500,
   apiKey
 }) {
+  const messages = [];
+  if (system) messages.push({role: 'system', content: system});
+  messages.push({role: 'user', content: user});
   const body = {
-    contents: [{
-      role: 'user',
-      parts: [{
-        text: user
-      }]
-    }],
-    generationConfig: {
-      maxOutputTokens: max
-    }
+    model: 'llama-3.3-70b-versatile',
+    messages: messages,
+    max_tokens: max,
+    temperature: 0.7
   };
-  if (system) body.systemInstruction = {
-    parts: [{
-      text: system
-    }]
-  };
-  if (tools) body.tools = [{
-  }];
-  const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=' + encodeURIComponent(apiKey);
-  const r = await fetch(url, {
+  const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: {
-      'content-type': 'application/json'
+      'content-type': 'application/json',
+      'authorization': 'Bearer ' + apiKey
     },
     body: JSON.stringify(body)
   });
@@ -265,8 +256,7 @@ async function callAI({
     throw new Error('API error ' + r.status + (msg ? ': ' + msg : ''));
   }
   const d = await r.json();
-  const parts = (((d.candidates || [])[0] || {}).content || {}).parts || [];
-  return parts.map(p => p.text || '').join('\n').trim();
+  return (((d.choices || [])[0] || {}).message || {}).content || '';
 }
 function jparse(t) {
   const c = t.replace(/```json|```/g, '').trim();
@@ -2371,7 +2361,7 @@ function Settings({
     placeholder: "AIza…"
   }), /*#__PURE__*/React.createElement("p", {
     className: "text-xs text-mut mt-1.5"
-  }, "Stored only in your browser's localStorage. Free key: aistudio.google.com → Get API key. Free tier: ~1500 requests/day."), /*#__PURE__*/React.createElement(Btn, {
+  }, "Stored only in your browser's localStorage. Free key: console.groq.com → API Keys → Create API key. Free tier: 14,400 requests/day."), /*#__PURE__*/React.createElement(Btn, {
     className: "w-full mt-3",
     onClick: () => {
       up(d => {
