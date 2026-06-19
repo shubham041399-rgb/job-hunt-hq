@@ -10,7 +10,6 @@
 <script>tailwind.config={theme:{extend:{colors:{bg:'#0D1117',card:'#161B22',line:'#21262D',acc:'#00FF94',amb:'#F4A623',mut:'#8B949E'},fontFamily:{disp:['Space Grotesk','sans-serif'],body:['Inter','sans-serif'],mono:['JetBrains Mono','monospace']}}}}</script>
 <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-<script src="https://unpkg.com/@babel/standalone@7.23.10/babel.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 <style>
   html,body{background:#0D1117;color:#E6EDF3;font-family:Inter,sans-serif;-webkit-tap-highlight-color:transparent}
@@ -48,35 +47,66 @@
 <body>
 <div id="root"></div>
 <div id="toast"></div>
-<script type="text/babel">
-const {useState,useEffect,useRef,useMemo} = React;
+<script>
+const {
+  useState,
+  useEffect,
+  useRef,
+  useMemo
+} = React;
 
 /* ================= CONSTANTS ================= */
-const DEADLINE = new Date(2026,9,31,23,59,59); // Oct 31 2026
-const BOND_START = new Date(2025,10,1); // Nov 1 2025 approx
-const STATUSES = ['Applied','Shortlisted','Round 1','Round 2','Final','Offer','Rejected','Ghosted'];
+const DEADLINE = new Date(2026, 9, 31, 23, 59, 59); // Oct 31 2026
+const BOND_START = new Date(2025, 10, 1); // Nov 1 2025 approx
+const STATUSES = ['Applied', 'Shortlisted', 'Round 1', 'Round 2', 'Final', 'Offer', 'Rejected', 'Ghosted'];
 const STATUS_STYLE = {
-  'Applied':{background:'rgba(139,148,158,.15)',color:'#8B949E'},
-  'Shortlisted':{background:'rgba(88,166,255,.15)',color:'#58A6FF'},
-  'Round 1':{background:'rgba(244,166,35,.15)',color:'#F4A623'},
-  'Round 2':{background:'rgba(244,166,35,.22)',color:'#F4A623'},
-  'Final':{background:'rgba(0,255,148,.12)',color:'#00FF94'},
-  'Offer':{background:'rgba(0,255,148,.22)',color:'#00FF94'},
-  'Rejected':{background:'rgba(248,81,73,.15)',color:'#F85149'},
-  'Ghosted':{background:'rgba(139,148,158,.1)',color:'#6E7681'}
+  'Applied': {
+    background: 'rgba(139,148,158,.15)',
+    color: '#8B949E'
+  },
+  'Shortlisted': {
+    background: 'rgba(88,166,255,.15)',
+    color: '#58A6FF'
+  },
+  'Round 1': {
+    background: 'rgba(244,166,35,.15)',
+    color: '#F4A623'
+  },
+  'Round 2': {
+    background: 'rgba(244,166,35,.22)',
+    color: '#F4A623'
+  },
+  'Final': {
+    background: 'rgba(0,255,148,.12)',
+    color: '#00FF94'
+  },
+  'Offer': {
+    background: 'rgba(0,255,148,.22)',
+    color: '#00FF94'
+  },
+  'Rejected': {
+    background: 'rgba(248,81,73,.15)',
+    color: '#F85149'
+  },
+  'Ghosted': {
+    background: 'rgba(139,148,158,.1)',
+    color: '#6E7681'
+  }
 };
-const REJECT_STAGES = ['Resume Rejected','Round 1','Round 2','Final','Ghosted'];
-
+const REJECT_STAGES = ['Resume Rejected', 'Round 1', 'Round 2', 'Final', 'Ghosted'];
 const PROFILE = {
-  name:'Shubham', email:'shubham041399@gmail.com', phone:'+91-9354243483', location:'Pune, India',
-  current:'Management Trainee (Operations), Genpact — Oct 2025 to Present. Bond ends October 31, 2026.',
-  targetSalary:'14+ LPA', experience:'5+ years in BFSI Operations (US 401k Retirement Plan Administration)',
-  targetRoles:['Operations Manager','Assistant Manager – Operations','Process Excellence Manager','Business Analyst – Operations','Team Lead – Wealth/Retirement Operations'],
-  history:'SME at EXL (Jan 2024–Oct 2025), Process Associate at SunLife Financial (Mar 2022–Jan 2024), Operations Trainee at Aston Carter (Mar 2021–Mar 2022)',
-  skills:['US 401k Retirement Plans','SLA/TAT Management','Team Leadership (12+ FTEs)','Client Relations & Governance','Root Cause Analysis (RCA)','RPA & Automation','MS Excel Advanced','VLOOKUP','Pivot Tables','Tableau','Dashboard Creation','MIS Reporting','Workforce Planning','Performance Monitoring'],
-  achievements:['Extra Miler Award (SME, EXL)','#1 performer 3 consecutive months (SunLife)','RPA implementation reducing TAT by 50%','BAU transition achieving 95–99% quality','100% SLA compliance at Genpact, zero missed deliverables']
+  name: 'Shubham',
+  email: 'shubham041399@gmail.com',
+  phone: '+91-9354243483',
+  location: 'Pune, India',
+  current: 'Management Trainee (Operations), Genpact — Oct 2025 to Present. Bond ends October 31, 2026.',
+  targetSalary: '14+ LPA',
+  experience: '5+ years in BFSI Operations (US 401k Retirement Plan Administration)',
+  targetRoles: ['Operations Manager', 'Assistant Manager – Operations', 'Process Excellence Manager', 'Business Analyst – Operations', 'Team Lead – Wealth/Retirement Operations'],
+  history: 'SME at EXL (Jan 2024–Oct 2025), Process Associate at SunLife Financial (Mar 2022–Jan 2024), Operations Trainee at Aston Carter (Mar 2021–Mar 2022)',
+  skills: ['US 401k Retirement Plans', 'SLA/TAT Management', 'Team Leadership (12+ FTEs)', 'Client Relations & Governance', 'Root Cause Analysis (RCA)', 'RPA & Automation', 'MS Excel Advanced', 'VLOOKUP', 'Pivot Tables', 'Tableau', 'Dashboard Creation', 'MIS Reporting', 'Workforce Planning', 'Performance Monitoring'],
+  achievements: ['Extra Miler Award (SME, EXL)', '#1 performer 3 consecutive months (SunLife)', 'RPA implementation reducing TAT by 50%', 'BAU transition achieving 95–99% quality', '100% SLA compliance at Genpact, zero missed deliverables']
 };
-
 const BASE_RESUME = `SHUBHAM — Assistant Manager – Operations | BFSI | US 401(k) Retirement Plans | Team Leadership
 shubham041399@gmail.com | +91-9354243483 | Delhi / Pune | Open to relocation: Delhi NCR
 
@@ -111,1036 +141,2446 @@ KEY ACHIEVEMENTS
 
 EDUCATION: BCom, University of Delhi
 TECHNICAL: MS Excel (Advanced), VLOOKUP, Pivot Tables, Tableau, MIS Reporting, RPA support, Queue Management`;
-
-const PROFILE_PROMPT = `CANDIDATE PROFILE:\n${JSON.stringify(PROFILE,null,1)}\n\nBASE RESUME:\n${BASE_RESUME}`;
+const PROFILE_PROMPT = `CANDIDATE PROFILE:\n${JSON.stringify(PROFILE, null, 1)}\n\nBASE RESUME:\n${BASE_RESUME}`;
 
 /* ================= STORAGE ================= */
-const KEY='shubh_jobhunt_v1';
-const DEFAULT_DB={apiKey:'',apps:[],savedJobs:[],prep:{},gaps:[],offers:[],weights:{salary:40,growth:25,location:15,wlb:20},tasks:{},moods:[],research:{},rejections:[],dailyTarget:2,noticeDays:60,bondAmount:200000};
-function loadDB(){try{const raw=localStorage.getItem(KEY);return raw?{...DEFAULT_DB,...JSON.parse(raw)}:{...DEFAULT_DB};}catch(e){return {...DEFAULT_DB};}}
-function saveDB(db){try{localStorage.setItem(KEY,JSON.stringify(db));}catch(e){console.warn('localStorage unavailable',e);}}
+const KEY = 'shubh_jobhunt_v1';
+const DEFAULT_DB = {
+  apiKey: '',
+  apps: [],
+  savedJobs: [],
+  prep: {},
+  gaps: [],
+  offers: [],
+  weights: {
+    salary: 40,
+    growth: 25,
+    location: 15,
+    wlb: 20
+  },
+  tasks: {},
+  moods: [],
+  research: {},
+  rejections: [],
+  dailyTarget: 2,
+  noticeDays: 60,
+  bondAmount: 200000
+};
+function loadDB() {
+  try {
+    const raw = localStorage.getItem(KEY);
+    return raw ? {
+      ...DEFAULT_DB,
+      ...JSON.parse(raw)
+    } : {
+      ...DEFAULT_DB
+    };
+  } catch (e) {
+    return {
+      ...DEFAULT_DB
+    };
+  }
+}
+function saveDB(db) {
+  try {
+    localStorage.setItem(KEY, JSON.stringify(db));
+  } catch (e) {
+    console.warn('localStorage unavailable', e);
+  }
+}
 
 /* ================= UTIL ================= */
-const dkey=(d=new Date())=>d.toISOString().slice(0,10);
-const fmt=(d)=>new Date(d).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
-const daysLeft=()=>Math.max(0,Math.ceil((DEADLINE-new Date())/864e5));
-const addDays=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x;};
-function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>el.classList.remove('show'),2200);}
-function copyText(t,label){navigator.clipboard.writeText(t).then(()=>toast((label||'Copied')+' ✓')).catch(()=>toast('Copy failed'));}
-function downloadText(name,content){const b=new Blob([content],{type:'text/plain'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;a.click();URL.revokeObjectURL(a.href);}
+const dkey = (d = new Date()) => d.toISOString().slice(0, 10);
+const fmt = d => new Date(d).toLocaleDateString('en-IN', {
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric'
+});
+const daysLeft = () => Math.max(0, Math.ceil((DEADLINE - new Date()) / 864e5));
+const addDays = (d, n) => {
+  const x = new Date(d);
+  x.setDate(x.getDate() + n);
+  return x;
+};
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => el.classList.remove('show'), 2200);
+}
+function copyText(t, label) {
+  navigator.clipboard.writeText(t).then(() => toast((label || 'Copied') + ' ✓')).catch(() => toast('Copy failed'));
+}
+function downloadText(name, content) {
+  const b = new Blob([content], {
+    type: 'text/plain'
+  });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(b);
+  a.download = name;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
 
 /* ================= AI ================= */
-async function callAI({system,user,tools,max=2500,apiKey}){
-  const body={contents:[{role:'user',parts:[{text:user}]}],generationConfig:{maxOutputTokens:max}};
-  if(system)body.systemInstruction={parts:[{text:system}]};
-  if(tools)body.tools=[{google_search:{}}];
-  const url='https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='+encodeURIComponent(apiKey);
-  const r=await fetch(url,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});
-  if(!r.ok){let msg='';try{msg=((await r.json()).error||{}).message||'';}catch(e){}throw new Error('API error '+r.status+(msg?': '+msg:''));}
-  const d=await r.json();
-  const parts=((((d.candidates||[])[0])||{}).content||{}).parts||[];
-  return parts.map(p=>p.text||'').join('\n').trim();
-}
-function jparse(t){
-  const c=t.replace(/```json|```/g,'').trim();
-  const a=c.indexOf('['),o=c.indexOf('{');
-  let s,e;
-  if(a>-1&&(o===-1||a<o)){s=a;e=c.lastIndexOf(']');}else{s=o;e=c.lastIndexOf('}');}
-  if(s===-1||e===-1)throw new Error('AI did not return valid JSON');
-  return JSON.parse(c.slice(s,e+1));
-}
-const WEB_SEARCH=true; // Gemini google_search grounding
-
-function useAI(db){
-  const [busy,setBusy]=useState(false);
-  const [err,setErr]=useState('');
-  const run=async(opts)=>{
-    if(!db.apiKey){setErr('No API key set. Go to More → Settings and paste your free Gemini API key (aistudio.google.com).');return null;}
-    setBusy(true);setErr('');
-    try{return await callAI({...opts,apiKey:db.apiKey});}
-    catch(e){setErr(e.message);return null;}
-    finally{setBusy(false);}
+async function callAI({
+  system,
+  user,
+  tools,
+  max = 2500,
+  apiKey
+}) {
+  const body = {
+    contents: [{
+      role: 'user',
+      parts: [{
+        text: user
+      }]
+    }],
+    generationConfig: {
+      maxOutputTokens: max
+    }
   };
-  return {busy,err,run,setErr};
+  if (system) body.systemInstruction = {
+    parts: [{
+      text: system
+    }]
+  };
+  if (tools) body.tools = [{
+    google_search: {}
+  }];
+  const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + encodeURIComponent(apiKey);
+  const r = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json'
+    },
+    body: JSON.stringify(body)
+  });
+  if (!r.ok) {
+    let msg = '';
+    try {
+      msg = ((await r.json()).error || {}).message || '';
+    } catch (e) {}
+    throw new Error('API error ' + r.status + (msg ? ': ' + msg : ''));
+  }
+  const d = await r.json();
+  const parts = (((d.candidates || [])[0] || {}).content || {}).parts || [];
+  return parts.map(p => p.text || '').join('\n').trim();
+}
+function jparse(t) {
+  const c = t.replace(/```json|```/g, '').trim();
+  const a = c.indexOf('['),
+    o = c.indexOf('{');
+  let s, e;
+  if (a > -1 && (o === -1 || a < o)) {
+    s = a;
+    e = c.lastIndexOf(']');
+  } else {
+    s = o;
+    e = c.lastIndexOf('}');
+  }
+  if (s === -1 || e === -1) throw new Error('AI did not return valid JSON');
+  return JSON.parse(c.slice(s, e + 1));
+}
+const WEB_SEARCH = true; // Gemini google_search grounding
+
+function useAI(db) {
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+  const run = async opts => {
+    if (!db.apiKey) {
+      setErr('No API key set. Go to More → Settings and paste your free Gemini API key (aistudio.google.com).');
+      return null;
+    }
+    setBusy(true);
+    setErr('');
+    try {
+      return await callAI({
+        ...opts,
+        apiKey: db.apiKey
+      });
+    } catch (e) {
+      setErr(e.message);
+      return null;
+    } finally {
+      setBusy(false);
+    }
+  };
+  return {
+    busy,
+    err,
+    run,
+    setErr
+  };
 }
 
 /* ================= UI PRIMITIVES ================= */
-const Card=({title,sub,children,right,className=''})=>(
-  <div className={'bg-card border border-line rounded-2xl p-4 '+className}>
-    {(title||right)&&<div className="flex items-start justify-between gap-2 mb-2">
-      <div>{title&&<h3 className="font-disp font-bold text-[15px]">{title}</h3>}
-      {sub&&<p className="text-xs text-mut mt-0.5">{sub}</p>}</div>
-      {right}
-    </div>}
-    {children}
-  </div>);
-const Btn=({children,onClick,variant='p',disabled,small,className=''})=>(
-  <button onClick={onClick} disabled={disabled} className={`btn btn-${variant} ${small?'btn-sm':''} ${className}`}>{children}</button>);
-const Lbl=({children})=><label className="block text-[11px] font-semibold text-mut uppercase tracking-wide mb-1 mt-3 first:mt-0">{children}</label>;
-const Busy=({msg='AI thinking…'})=>(<div className="flex items-center gap-2 mt-3 text-acc text-sm font-semibold pulse"><span className="w-2 h-2 rounded-full bg-acc inline-block"></span>{msg}</div>);
-const Err=({msg})=>msg?<div className="err">{msg}</div>:null;
-const Out=({text})=>text?<div className="out">{text}</div>:null;
-const Badge=({status})=><span className="badge" style={STATUS_STYLE[status]||{}}>{status}</span>;
-const Empty=({children})=><div className="text-center text-mut text-sm py-8 border border-dashed border-line rounded-2xl">{children}</div>;
+const Card = ({
+  title,
+  sub,
+  children,
+  right,
+  className = ''
+}) => /*#__PURE__*/React.createElement("div", {
+  className: 'bg-card border border-line rounded-2xl p-4 ' + className
+}, (title || right) && /*#__PURE__*/React.createElement("div", {
+  className: "flex items-start justify-between gap-2 mb-2"
+}, /*#__PURE__*/React.createElement("div", null, title && /*#__PURE__*/React.createElement("h3", {
+  className: "font-disp font-bold text-[15px]"
+}, title), sub && /*#__PURE__*/React.createElement("p", {
+  className: "text-xs text-mut mt-0.5"
+}, sub)), right), children);
+const Btn = ({
+  children,
+  onClick,
+  variant = 'p',
+  disabled,
+  small,
+  className = ''
+}) => /*#__PURE__*/React.createElement("button", {
+  onClick: onClick,
+  disabled: disabled,
+  className: `btn btn-${variant} ${small ? 'btn-sm' : ''} ${className}`
+}, children);
+const Lbl = ({
+  children
+}) => /*#__PURE__*/React.createElement("label", {
+  className: "block text-[11px] font-semibold text-mut uppercase tracking-wide mb-1 mt-3 first:mt-0"
+}, children);
+const Busy = ({
+  msg = 'AI thinking…'
+}) => /*#__PURE__*/React.createElement("div", {
+  className: "flex items-center gap-2 mt-3 text-acc text-sm font-semibold pulse"
+}, /*#__PURE__*/React.createElement("span", {
+  className: "w-2 h-2 rounded-full bg-acc inline-block"
+}), msg);
+const Err = ({
+  msg
+}) => msg ? /*#__PURE__*/React.createElement("div", {
+  className: "err"
+}, msg) : null;
+const Out = ({
+  text
+}) => text ? /*#__PURE__*/React.createElement("div", {
+  className: "out"
+}, text) : null;
+const Badge = ({
+  status
+}) => /*#__PURE__*/React.createElement("span", {
+  className: "badge",
+  style: STATUS_STYLE[status] || {}
+}, status);
+const Empty = ({
+  children
+}) => /*#__PURE__*/React.createElement("div", {
+  className: "text-center text-mut text-sm py-8 border border-dashed border-line rounded-2xl"
+}, children);
 
 /* ================= MODULE 1: DASHBOARD ================= */
-function Dashboard({db,go}){
-  const apps=db.apps;
-  const interviews=apps.filter(a=>['Round 1','Round 2','Final','Shortlisted'].includes(a.status)).length;
-  const offers=apps.filter(a=>a.status==='Offer').length;
-  const rejections=apps.filter(a=>['Rejected','Ghosted'].includes(a.status)).length+db.rejections.length;
-  const dl=daysLeft();
-  const last7=apps.filter(a=>new Date(a.date)>=addDays(new Date(),-7)).length;
-  const weeklyTarget=db.dailyTarget*7;
-  const health=last7>=weeklyTarget?['ON PACE','#00FF94']:last7>=Math.ceil(weeklyTarget/2)?['SLIPPING','#F4A623']:['CRITICAL','#F85149'];
-  const lastAct=apps.length?fmt(apps.map(a=>a.date).sort().slice(-1)[0]):'—';
-  const stats=[['Applied',apps.length,'#E6EDF3'],['Interviews',interviews,'#F4A623'],['Offers',offers,'#00FF94'],['Rejections',rejections,'#F85149']];
-  return (<div className="screen space-y-4">
-    <div className="bg-card border border-line rounded-2xl p-5 text-center">
-      <p className="text-[11px] font-semibold text-mut uppercase tracking-widest">Genpact bond ends · Oct 31 2026</p>
-      <div className="clock font-bold text-5xl mt-1" style={{color:dl<60?'#F85149':'#00FF94'}}>{dl}</div>
-      <p className="text-xs text-mut">days remaining {dl<60&&<span className="text-[#F85149] font-bold">· FINAL STRETCH</span>}</p>
-    </div>
-    <div className="grid grid-cols-2 gap-3">
-      {stats.map(([l,v,c])=>(
-        <div key={l} className="bg-card border border-line rounded-2xl p-4">
-          <div className="clock font-bold text-2xl" style={{color:c}}>{v}</div>
-          <div className="text-xs text-mut mt-0.5">{l}</div>
-        </div>))}
-    </div>
-    <Card title="Pipeline health" sub={`Last activity: ${lastAct}`}>
-      <div className="flex items-center justify-between">
-        <div className="text-sm text-mut">{last7} applications in last 7 days<br/><span className="text-xs">Target: {weeklyTarget}/week ({db.dailyTarget}/day)</span></div>
-        <span className="badge font-mono" style={{background:health[1]+'22',color:health[1]}}>{health[0]}</span>
-      </div>
-    </Card>
-    <div className="grid grid-cols-3 gap-2">
-      <Btn onClick={()=>go('tracker')} className="w-full">+ Add app</Btn>
-      <Btn variant="a" onClick={()=>go('search')} className="w-full">Search jobs</Btn>
-      <Btn variant="g" onClick={()=>go('prep')} className="w-full">Prep</Btn>
-    </div>
-    {apps.slice(-3).reverse().map(a=>(
-      <div key={a.id} className="bg-card border border-line rounded-2xl p-3 flex items-center justify-between">
-        <div><div className="font-semibold text-sm">{a.role}</div><div className="text-xs text-mut">{a.company} · {fmt(a.date)}</div></div>
-        <Badge status={a.status}/>
-      </div>))}
-  </div>);
+function Dashboard({
+  db,
+  go
+}) {
+  const apps = db.apps;
+  const interviews = apps.filter(a => ['Round 1', 'Round 2', 'Final', 'Shortlisted'].includes(a.status)).length;
+  const offers = apps.filter(a => a.status === 'Offer').length;
+  const rejections = apps.filter(a => ['Rejected', 'Ghosted'].includes(a.status)).length + db.rejections.length;
+  const dl = daysLeft();
+  const last7 = apps.filter(a => new Date(a.date) >= addDays(new Date(), -7)).length;
+  const weeklyTarget = db.dailyTarget * 7;
+  const health = last7 >= weeklyTarget ? ['ON PACE', '#00FF94'] : last7 >= Math.ceil(weeklyTarget / 2) ? ['SLIPPING', '#F4A623'] : ['CRITICAL', '#F85149'];
+  const lastAct = apps.length ? fmt(apps.map(a => a.date).sort().slice(-1)[0]) : '—';
+  const stats = [['Applied', apps.length, '#E6EDF3'], ['Interviews', interviews, '#F4A623'], ['Offers', offers, '#00FF94'], ['Rejections', rejections, '#F85149']];
+  return /*#__PURE__*/React.createElement("div", {
+    className: "screen space-y-4"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "bg-card border border-line rounded-2xl p-5 text-center"
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "text-[11px] font-semibold text-mut uppercase tracking-widest"
+  }, "Genpact bond ends · Oct 31 2026"), /*#__PURE__*/React.createElement("div", {
+    className: "clock font-bold text-5xl mt-1",
+    style: {
+      color: dl < 60 ? '#F85149' : '#00FF94'
+    }
+  }, dl), /*#__PURE__*/React.createElement("p", {
+    className: "text-xs text-mut"
+  }, "days remaining ", dl < 60 && /*#__PURE__*/React.createElement("span", {
+    className: "text-[#F85149] font-bold"
+  }, "· FINAL STRETCH"))), /*#__PURE__*/React.createElement("div", {
+    className: "grid grid-cols-2 gap-3"
+  }, stats.map(([l, v, c]) => /*#__PURE__*/React.createElement("div", {
+    key: l,
+    className: "bg-card border border-line rounded-2xl p-4"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "clock font-bold text-2xl",
+    style: {
+      color: c
+    }
+  }, v), /*#__PURE__*/React.createElement("div", {
+    className: "text-xs text-mut mt-0.5"
+  }, l)))), /*#__PURE__*/React.createElement(Card, {
+    title: "Pipeline health",
+    sub: `Last activity: ${lastAct}`
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center justify-between"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "text-sm text-mut"
+  }, last7, " applications in last 7 days", /*#__PURE__*/React.createElement("br", null), /*#__PURE__*/React.createElement("span", {
+    className: "text-xs"
+  }, "Target: ", weeklyTarget, "/week (", db.dailyTarget, "/day)")), /*#__PURE__*/React.createElement("span", {
+    className: "badge font-mono",
+    style: {
+      background: health[1] + '22',
+      color: health[1]
+    }
+  }, health[0]))), /*#__PURE__*/React.createElement("div", {
+    className: "grid grid-cols-3 gap-2"
+  }, /*#__PURE__*/React.createElement(Btn, {
+    onClick: () => go('tracker'),
+    className: "w-full"
+  }, "+ Add app"), /*#__PURE__*/React.createElement(Btn, {
+    variant: "a",
+    onClick: () => go('search'),
+    className: "w-full"
+  }, "Search jobs"), /*#__PURE__*/React.createElement(Btn, {
+    variant: "g",
+    onClick: () => go('prep'),
+    className: "w-full"
+  }, "Prep")), apps.slice(-3).reverse().map(a => /*#__PURE__*/React.createElement("div", {
+    key: a.id,
+    className: "bg-card border border-line rounded-2xl p-3 flex items-center justify-between"
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    className: "font-semibold text-sm"
+  }, a.role), /*#__PURE__*/React.createElement("div", {
+    className: "text-xs text-mut"
+  }, a.company, " · ", fmt(a.date))), /*#__PURE__*/React.createElement(Badge, {
+    status: a.status
+  }))));
 }
 
 /* ================= MODULE 3: APPLICATION TRACKER ================= */
-const BLANK_APP={company:'',role:'',date:dkey(),source:'LinkedIn',link:'',notes:'',status:'Applied',rejectionStage:''};
-function Tracker({db,up}){
-  const [form,setForm]=useState(null);
-  const [filter,setFilter]=useState('All');
-  const [sort,setSort]=useState('newest');
-  const f=(k,v)=>setForm({...form,[k]:v});
-  const save=()=>{
-    if(!form.company||!form.role){toast('Company and role required');return;}
-    up(d=>{
-      if(form.id){const i=d.apps.findIndex(a=>a.id===form.id);d.apps[i]=form;}
-      else d.apps.push({...form,id:Date.now(),followUp:dkey(addDays(form.date,7))});
+const BLANK_APP = {
+  company: '',
+  role: '',
+  date: dkey(),
+  source: 'LinkedIn',
+  link: '',
+  notes: '',
+  status: 'Applied',
+  rejectionStage: ''
+};
+function Tracker({
+  db,
+  up
+}) {
+  const [form, setForm] = useState(null);
+  const [filter, setFilter] = useState('All');
+  const [sort, setSort] = useState('newest');
+  const f = (k, v) => setForm({
+    ...form,
+    [k]: v
+  });
+  const save = () => {
+    if (!form.company || !form.role) {
+      toast('Company and role required');
+      return;
+    }
+    up(d => {
+      if (form.id) {
+        const i = d.apps.findIndex(a => a.id === form.id);
+        d.apps[i] = form;
+      } else d.apps.push({
+        ...form,
+        id: Date.now(),
+        followUp: dkey(addDays(form.date, 7))
+      });
     });
-    setForm(null);toast(form.id?'Application updated':'Application added');
+    setForm(null);
+    toast(form.id ? 'Application updated' : 'Application added');
   };
-  const del=(id)=>{if(confirm('Delete this application?'))up(d=>{d.apps=d.apps.filter(a=>a.id!==id);});};
-  let list=db.apps.filter(a=>filter==='All'||a.status===filter);
-  list=[...list].sort((a,b)=>sort==='newest'?b.date.localeCompare(a.date):a.date.localeCompare(b.date));
-  const overdue=(a)=>a.status==='Applied'&&a.followUp&&a.followUp<=dkey();
-  return (<div className="screen space-y-3">
-    <div className="flex gap-2">
-      <select className="inp flex-1" value={filter} onChange={e=>setFilter(e.target.value)}>
-        <option>All</option>{STATUSES.map(s=><option key={s}>{s}</option>)}
-      </select>
-      <select className="inp flex-1" value={sort} onChange={e=>setSort(e.target.value)}>
-        <option value="newest">Newest first</option><option value="oldest">Oldest first</option>
-      </select>
-      <Btn onClick={()=>setForm({...BLANK_APP,date:dkey()})}>+</Btn>
-    </div>
-    {form&&<Card title={form.id?'Edit application':'New application'}>
-      <Lbl>Company</Lbl><input className="inp" value={form.company} onChange={e=>f('company',e.target.value)} placeholder="e.g. WNS"/>
-      <Lbl>Role</Lbl><input className="inp" value={form.role} onChange={e=>f('role',e.target.value)} placeholder="e.g. Assistant Manager – Operations"/>
-      <div className="grid grid-cols-2 gap-2">
-        <div><Lbl>Date applied</Lbl><input type="date" className="inp" value={form.date} onChange={e=>f('date',e.target.value)}/></div>
-        <div><Lbl>Source</Lbl><select className="inp" value={form.source} onChange={e=>f('source',e.target.value)}>
-          {['LinkedIn','Naukri','Foundit','Referral','Direct','Other'].map(s=><option key={s}>{s}</option>)}</select></div>
-      </div>
-      <Lbl>JD link</Lbl><input className="inp" value={form.link} onChange={e=>f('link',e.target.value)} placeholder="https://…"/>
-      <Lbl>Status</Lbl><select className="inp" value={form.status} onChange={e=>f('status',e.target.value)}>{STATUSES.map(s=><option key={s}>{s}</option>)}</select>
-      {form.status==='Rejected'&&<div><Lbl>Rejected at stage</Lbl><select className="inp" value={form.rejectionStage} onChange={e=>f('rejectionStage',e.target.value)}>
-        <option value="">Select stage</option>{REJECT_STAGES.map(s=><option key={s}>{s}</option>)}</select></div>}
-      <Lbl>Notes</Lbl><textarea className="inp" rows="2" value={form.notes} onChange={e=>f('notes',e.target.value)}/>
-      <div className="flex gap-2 mt-4">
-        <Btn onClick={save} className="flex-1">Save</Btn>
-        <Btn variant="g" onClick={()=>setForm(null)}>Cancel</Btn>
-      </div>
-    </Card>}
-    {!list.length&&<Empty>No applications yet. Hit + to log your first one.</Empty>}
-    {list.map(a=>(
-      <div key={a.id} className="bg-card border border-line rounded-2xl p-3">
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0">
-            <div className="font-semibold text-sm truncate">{a.role}</div>
-            <div className="text-xs text-mut">{a.company} · {fmt(a.date)} · via {a.source}</div>
-            {a.link&&<a className="text-xs text-acc underline" href={a.link} target="_blank" rel="noreferrer">JD link</a>}
-            {a.notes&&<div className="text-xs text-mut mt-1">{a.notes}</div>}
-            {overdue(a)&&<div className="text-xs text-amb font-semibold mt-1">⚠ Follow-up due ({fmt(a.followUp)})</div>}
-          </div>
-          <Badge status={a.status}/>
-        </div>
-        <div className="flex gap-2 mt-2 items-center">
-          <select className="inp btn-sm !w-auto text-xs !py-1" value={a.status}
-            onChange={e=>up(d=>{const x=d.apps.find(p=>p.id===a.id);x.status=e.target.value;})}>
-            {STATUSES.map(s=><option key={s}>{s}</option>)}
-          </select>
-          <Btn small variant="g" onClick={()=>setForm({...a})}>Edit</Btn>
-          <Btn small variant="d" onClick={()=>del(a.id)}>Delete</Btn>
-        </div>
-      </div>))}
-  </div>);
+  const del = id => {
+    if (confirm('Delete this application?')) up(d => {
+      d.apps = d.apps.filter(a => a.id !== id);
+    });
+  };
+  let list = db.apps.filter(a => filter === 'All' || a.status === filter);
+  list = [...list].sort((a, b) => sort === 'newest' ? b.date.localeCompare(a.date) : a.date.localeCompare(b.date));
+  const overdue = a => a.status === 'Applied' && a.followUp && a.followUp <= dkey();
+  return /*#__PURE__*/React.createElement("div", {
+    className: "screen space-y-3"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex gap-2"
+  }, /*#__PURE__*/React.createElement("select", {
+    className: "inp flex-1",
+    value: filter,
+    onChange: e => setFilter(e.target.value)
+  }, /*#__PURE__*/React.createElement("option", null, "All"), STATUSES.map(s => /*#__PURE__*/React.createElement("option", {
+    key: s
+  }, s))), /*#__PURE__*/React.createElement("select", {
+    className: "inp flex-1",
+    value: sort,
+    onChange: e => setSort(e.target.value)
+  }, /*#__PURE__*/React.createElement("option", {
+    value: "newest"
+  }, "Newest first"), /*#__PURE__*/React.createElement("option", {
+    value: "oldest"
+  }, "Oldest first")), /*#__PURE__*/React.createElement(Btn, {
+    onClick: () => setForm({
+      ...BLANK_APP,
+      date: dkey()
+    })
+  }, "+")), form && /*#__PURE__*/React.createElement(Card, {
+    title: form.id ? 'Edit application' : 'New application'
+  }, /*#__PURE__*/React.createElement(Lbl, null, "Company"), /*#__PURE__*/React.createElement("input", {
+    className: "inp",
+    value: form.company,
+    onChange: e => f('company', e.target.value),
+    placeholder: "e.g. WNS"
+  }), /*#__PURE__*/React.createElement(Lbl, null, "Role"), /*#__PURE__*/React.createElement("input", {
+    className: "inp",
+    value: form.role,
+    onChange: e => f('role', e.target.value),
+    placeholder: "e.g. Assistant Manager – Operations"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "grid grid-cols-2 gap-2"
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(Lbl, null, "Date applied"), /*#__PURE__*/React.createElement("input", {
+    type: "date",
+    className: "inp",
+    value: form.date,
+    onChange: e => f('date', e.target.value)
+  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(Lbl, null, "Source"), /*#__PURE__*/React.createElement("select", {
+    className: "inp",
+    value: form.source,
+    onChange: e => f('source', e.target.value)
+  }, ['LinkedIn', 'Naukri', 'Foundit', 'Referral', 'Direct', 'Other'].map(s => /*#__PURE__*/React.createElement("option", {
+    key: s
+  }, s))))), /*#__PURE__*/React.createElement(Lbl, null, "JD link"), /*#__PURE__*/React.createElement("input", {
+    className: "inp",
+    value: form.link,
+    onChange: e => f('link', e.target.value),
+    placeholder: "https://…"
+  }), /*#__PURE__*/React.createElement(Lbl, null, "Status"), /*#__PURE__*/React.createElement("select", {
+    className: "inp",
+    value: form.status,
+    onChange: e => f('status', e.target.value)
+  }, STATUSES.map(s => /*#__PURE__*/React.createElement("option", {
+    key: s
+  }, s))), form.status === 'Rejected' && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(Lbl, null, "Rejected at stage"), /*#__PURE__*/React.createElement("select", {
+    className: "inp",
+    value: form.rejectionStage,
+    onChange: e => f('rejectionStage', e.target.value)
+  }, /*#__PURE__*/React.createElement("option", {
+    value: ""
+  }, "Select stage"), REJECT_STAGES.map(s => /*#__PURE__*/React.createElement("option", {
+    key: s
+  }, s)))), /*#__PURE__*/React.createElement(Lbl, null, "Notes"), /*#__PURE__*/React.createElement("textarea", {
+    className: "inp",
+    rows: "2",
+    value: form.notes,
+    onChange: e => f('notes', e.target.value)
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "flex gap-2 mt-4"
+  }, /*#__PURE__*/React.createElement(Btn, {
+    onClick: save,
+    className: "flex-1"
+  }, "Save"), /*#__PURE__*/React.createElement(Btn, {
+    variant: "g",
+    onClick: () => setForm(null)
+  }, "Cancel"))), !list.length && /*#__PURE__*/React.createElement(Empty, null, "No applications yet. Hit + to log your first one."), list.map(a => /*#__PURE__*/React.createElement("div", {
+    key: a.id,
+    className: "bg-card border border-line rounded-2xl p-3"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-start justify-between gap-2"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "min-w-0"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "font-semibold text-sm truncate"
+  }, a.role), /*#__PURE__*/React.createElement("div", {
+    className: "text-xs text-mut"
+  }, a.company, " · ", fmt(a.date), " · via ", a.source), a.link && /*#__PURE__*/React.createElement("a", {
+    className: "text-xs text-acc underline",
+    href: a.link,
+    target: "_blank",
+    rel: "noreferrer"
+  }, "JD link"), a.notes && /*#__PURE__*/React.createElement("div", {
+    className: "text-xs text-mut mt-1"
+  }, a.notes), overdue(a) && /*#__PURE__*/React.createElement("div", {
+    className: "text-xs text-amb font-semibold mt-1"
+  }, "⚠ Follow-up due (", fmt(a.followUp), ")")), /*#__PURE__*/React.createElement(Badge, {
+    status: a.status
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "flex gap-2 mt-2 items-center"
+  }, /*#__PURE__*/React.createElement("select", {
+    className: "inp btn-sm !w-auto text-xs !py-1",
+    value: a.status,
+    onChange: e => up(d => {
+      const x = d.apps.find(p => p.id === a.id);
+      x.status = e.target.value;
+    })
+  }, STATUSES.map(s => /*#__PURE__*/React.createElement("option", {
+    key: s
+  }, s))), /*#__PURE__*/React.createElement(Btn, {
+    small: true,
+    variant: "g",
+    onClick: () => setForm({
+      ...a
+    })
+  }, "Edit"), /*#__PURE__*/React.createElement(Btn, {
+    small: true,
+    variant: "d",
+    onClick: () => del(a.id)
+  }, "Delete")))));
 }
 
 /* ================= MODULE 2: JOB SEARCH ================= */
-function JobSearch({db,up}){
-  const ai=useAI(db);
-  const [tab,setTab]=useState('search');
-  const [q,setQ]=useState({role:'Assistant Manager Operations',loc:'Delhi NCR',exp:'5+ years'});
-  const [results,setResults]=useState([]);
-  const [jd,setJd]=useState('');
-  const [fit,setFit]=useState(null);
-  const search=async()=>{
+function JobSearch({
+  db,
+  up
+}) {
+  const ai = useAI(db);
+  const [tab, setTab] = useState('search');
+  const [q, setQ] = useState({
+    role: 'Assistant Manager Operations',
+    loc: 'Delhi NCR',
+    exp: '5+ years'
+  });
+  const [results, setResults] = useState([]);
+  const [jd, setJd] = useState('');
+  const [fit, setFit] = useState(null);
+  const search = async () => {
     setResults([]);
-    const text=await ai.run({
-      system:'You are a job-search agent for an Indian BFSI operations professional. Use web search to find REAL, currently open job postings (Naukri, LinkedIn, company career pages). Return ONLY a JSON array, no prose: [{"title","company","location","salary","source","url","match"}] where match is 0-100 fit vs the candidate profile. Max 8 jobs. If salary unknown use "Not disclosed". Never invent postings — only ones found via search.',
-      user:`${PROFILE_PROMPT}\n\nSEARCH: role="${q.role}" location="${q.loc}" experience="${q.exp}". Find live openings now.`,
-      tools:WEB_SEARCH,max:3000});
-    if(!text)return;
-    try{setResults(jparse(text));}catch(e){ai.setErr('Could not parse results. Try again.');}
+    const text = await ai.run({
+      system: 'You are a job-search agent for an Indian BFSI operations professional. Use web search to find REAL, currently open job postings (Naukri, LinkedIn, company career pages). Return ONLY a JSON array, no prose: [{"title","company","location","salary","source","url","match"}] where match is 0-100 fit vs the candidate profile. Max 8 jobs. If salary unknown use "Not disclosed". Never invent postings — only ones found via search.',
+      user: `${PROFILE_PROMPT}\n\nSEARCH: role="${q.role}" location="${q.loc}" experience="${q.exp}". Find live openings now.`,
+      tools: WEB_SEARCH,
+      max: 3000
+    });
+    if (!text) return;
+    try {
+      setResults(jparse(text));
+    } catch (e) {
+      ai.setErr('Could not parse results. Try again.');
+    }
   };
-  const scoreFit=async()=>{
+  const scoreFit = async () => {
     setFit(null);
-    const text=await ai.run({
-      system:'You are a brutally honest recruiter. Score how well this candidate fits the pasted JD. Return ONLY JSON: {"score":0-100,"verdict":"one blunt sentence","strengths":["…"],"gaps":["…"],"apply":"Yes/No/Maybe + why in one line"}',
-      user:`${PROFILE_PROMPT}\n\nJOB DESCRIPTION:\n${jd}`});
-    if(!text)return;
-    try{setFit(jparse(text));}catch(e){ai.setErr('Could not parse score. Try again.');}
+    const text = await ai.run({
+      system: 'You are a brutally honest recruiter. Score how well this candidate fits the pasted JD. Return ONLY JSON: {"score":0-100,"verdict":"one blunt sentence","strengths":["…"],"gaps":["…"],"apply":"Yes/No/Maybe + why in one line"}',
+      user: `${PROFILE_PROMPT}\n\nJOB DESCRIPTION:\n${jd}`
+    });
+    if (!text) return;
+    try {
+      setFit(jparse(text));
+    } catch (e) {
+      ai.setErr('Could not parse score. Try again.');
+    }
   };
-  const saveJob=(j)=>{up(d=>{d.savedJobs.push({...j,id:Date.now()});});toast('Job saved');};
-  const JobCard=({j,saved})=>(
-    <div className="bg-card border border-line rounded-2xl p-3">
-      <div className="flex justify-between gap-2">
-        <div className="min-w-0">
-          <div className="font-semibold text-sm">{j.title}</div>
-          <div className="text-xs text-mut">{j.company} · {j.location}</div>
-          <div className="text-xs text-amb mt-0.5">{j.salary} · {j.source}</div>
-        </div>
-        {j.match!=null&&<div className="clock font-bold text-lg" style={{color:j.match>=70?'#00FF94':j.match>=50?'#F4A623':'#F85149'}}>{j.match}</div>}
-      </div>
-      <div className="flex gap-2 mt-2">
-        {j.url&&<a href={j.url} target="_blank" rel="noreferrer" className="btn btn-g btn-sm">Open</a>}
-        {!saved&&<Btn small onClick={()=>saveJob(j)}>Save</Btn>}
-        {saved&&<Btn small variant="d" onClick={()=>up(d=>{d.savedJobs=d.savedJobs.filter(x=>x.id!==j.id);})}>Remove</Btn>}
-      </div>
-    </div>);
-  return (<div className="screen space-y-3">
-    <div className="flex gap-2">
-      {[['search','Search'],['fit','AI Fit Score'],['saved',`Saved (${db.savedJobs.length})`]].map(([k,l])=>(
-        <button key={k} onClick={()=>setTab(k)} className={`btn btn-sm flex-1 ${tab===k?'btn-p':'btn-g'}`}>{l}</button>))}
-    </div>
-    {tab==='search'&&<Card title="Live job search" sub="AI + web search across Naukri, LinkedIn & career pages">
-      <Lbl>Role</Lbl><input className="inp" value={q.role} onChange={e=>setQ({...q,role:e.target.value})}/>
-      <div className="grid grid-cols-2 gap-2">
-        <div><Lbl>Location</Lbl><input className="inp" value={q.loc} onChange={e=>setQ({...q,loc:e.target.value})}/></div>
-        <div><Lbl>Experience</Lbl><input className="inp" value={q.exp} onChange={e=>setQ({...q,exp:e.target.value})}/></div>
-      </div>
-      <Btn className="w-full mt-3" onClick={search} disabled={ai.busy}>Search live jobs</Btn>
-      {ai.busy&&<Busy msg="Searching the web for live openings…"/>}
-      <Err msg={ai.err}/>
-      <div className="space-y-2 mt-3">{results.map((j,i)=><JobCard key={i} j={j}/>)}</div>
-    </Card>}
-    {tab==='fit'&&<Card title="AI fit score" sub="Paste a JD — get a blunt 0–100 verdict">
-      <textarea className="inp" rows="7" placeholder="Paste full job description here…" value={jd} onChange={e=>setJd(e.target.value)}/>
-      <Btn className="w-full mt-3" onClick={scoreFit} disabled={ai.busy||!jd.trim()}>Score my fit</Btn>
-      {ai.busy&&<Busy/>}<Err msg={ai.err}/>
-      {fit&&<div className="mt-3 space-y-2">
-        <div className="flex items-center gap-3">
-          <div className="clock font-bold text-4xl" style={{color:fit.score>=70?'#00FF94':fit.score>=50?'#F4A623':'#F85149'}}>{fit.score}</div>
-          <div className="text-sm">{fit.verdict}</div>
-        </div>
-        <div className="text-xs"><span className="text-acc font-semibold">Strengths:</span> {(fit.strengths||[]).join(' · ')}</div>
-        <div className="text-xs"><span className="text-[#F85149] font-semibold">Gaps:</span> {(fit.gaps||[]).join(' · ')}</div>
-        <div className="text-sm font-semibold text-amb">{fit.apply}</div>
-      </div>}
-    </Card>}
-    {tab==='saved'&&<div className="space-y-2">
-      {!db.savedJobs.length&&<Empty>No saved jobs yet.</Empty>}
-      {db.savedJobs.map(j=><JobCard key={j.id} j={j} saved/>)}
-    </div>}
-  </div>);
+  const saveJob = j => {
+    up(d => {
+      d.savedJobs.push({
+        ...j,
+        id: Date.now()
+      });
+    });
+    toast('Job saved');
+  };
+  const JobCard = ({
+    j,
+    saved
+  }) => /*#__PURE__*/React.createElement("div", {
+    className: "bg-card border border-line rounded-2xl p-3"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex justify-between gap-2"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "min-w-0"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "font-semibold text-sm"
+  }, j.title), /*#__PURE__*/React.createElement("div", {
+    className: "text-xs text-mut"
+  }, j.company, " · ", j.location), /*#__PURE__*/React.createElement("div", {
+    className: "text-xs text-amb mt-0.5"
+  }, j.salary, " · ", j.source)), j.match != null && /*#__PURE__*/React.createElement("div", {
+    className: "clock font-bold text-lg",
+    style: {
+      color: j.match >= 70 ? '#00FF94' : j.match >= 50 ? '#F4A623' : '#F85149'
+    }
+  }, j.match)), /*#__PURE__*/React.createElement("div", {
+    className: "flex gap-2 mt-2"
+  }, j.url && /*#__PURE__*/React.createElement("a", {
+    href: j.url,
+    target: "_blank",
+    rel: "noreferrer",
+    className: "btn btn-g btn-sm"
+  }, "Open"), !saved && /*#__PURE__*/React.createElement(Btn, {
+    small: true,
+    onClick: () => saveJob(j)
+  }, "Save"), saved && /*#__PURE__*/React.createElement(Btn, {
+    small: true,
+    variant: "d",
+    onClick: () => up(d => {
+      d.savedJobs = d.savedJobs.filter(x => x.id !== j.id);
+    })
+  }, "Remove")));
+  return /*#__PURE__*/React.createElement("div", {
+    className: "screen space-y-3"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex gap-2"
+  }, [['search', 'Search'], ['fit', 'AI Fit Score'], ['saved', `Saved (${db.savedJobs.length})`]].map(([k, l]) => /*#__PURE__*/React.createElement("button", {
+    key: k,
+    onClick: () => setTab(k),
+    className: `btn btn-sm flex-1 ${tab === k ? 'btn-p' : 'btn-g'}`
+  }, l))), tab === 'search' && /*#__PURE__*/React.createElement(Card, {
+    title: "Live job search",
+    sub: "AI + web search across Naukri, LinkedIn & career pages"
+  }, /*#__PURE__*/React.createElement(Lbl, null, "Role"), /*#__PURE__*/React.createElement("input", {
+    className: "inp",
+    value: q.role,
+    onChange: e => setQ({
+      ...q,
+      role: e.target.value
+    })
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "grid grid-cols-2 gap-2"
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(Lbl, null, "Location"), /*#__PURE__*/React.createElement("input", {
+    className: "inp",
+    value: q.loc,
+    onChange: e => setQ({
+      ...q,
+      loc: e.target.value
+    })
+  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(Lbl, null, "Experience"), /*#__PURE__*/React.createElement("input", {
+    className: "inp",
+    value: q.exp,
+    onChange: e => setQ({
+      ...q,
+      exp: e.target.value
+    })
+  }))), /*#__PURE__*/React.createElement(Btn, {
+    className: "w-full mt-3",
+    onClick: search,
+    disabled: ai.busy
+  }, "Search live jobs"), ai.busy && /*#__PURE__*/React.createElement(Busy, {
+    msg: "Searching the web for live openings…"
+  }), /*#__PURE__*/React.createElement(Err, {
+    msg: ai.err
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "space-y-2 mt-3"
+  }, results.map((j, i) => /*#__PURE__*/React.createElement(JobCard, {
+    key: i,
+    j: j
+  })))), tab === 'fit' && /*#__PURE__*/React.createElement(Card, {
+    title: "AI fit score",
+    sub: "Paste a JD — get a blunt 0–100 verdict"
+  }, /*#__PURE__*/React.createElement("textarea", {
+    className: "inp",
+    rows: "7",
+    placeholder: "Paste full job description here…",
+    value: jd,
+    onChange: e => setJd(e.target.value)
+  }), /*#__PURE__*/React.createElement(Btn, {
+    className: "w-full mt-3",
+    onClick: scoreFit,
+    disabled: ai.busy || !jd.trim()
+  }, "Score my fit"), ai.busy && /*#__PURE__*/React.createElement(Busy, null), /*#__PURE__*/React.createElement(Err, {
+    msg: ai.err
+  }), fit && /*#__PURE__*/React.createElement("div", {
+    className: "mt-3 space-y-2"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-3"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "clock font-bold text-4xl",
+    style: {
+      color: fit.score >= 70 ? '#00FF94' : fit.score >= 50 ? '#F4A623' : '#F85149'
+    }
+  }, fit.score), /*#__PURE__*/React.createElement("div", {
+    className: "text-sm"
+  }, fit.verdict)), /*#__PURE__*/React.createElement("div", {
+    className: "text-xs"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "text-acc font-semibold"
+  }, "Strengths:"), " ", (fit.strengths || []).join(' · ')), /*#__PURE__*/React.createElement("div", {
+    className: "text-xs"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "text-[#F85149] font-semibold"
+  }, "Gaps:"), " ", (fit.gaps || []).join(' · ')), /*#__PURE__*/React.createElement("div", {
+    className: "text-sm font-semibold text-amb"
+  }, fit.apply))), tab === 'saved' && /*#__PURE__*/React.createElement("div", {
+    className: "space-y-2"
+  }, !db.savedJobs.length && /*#__PURE__*/React.createElement(Empty, null, "No saved jobs yet."), db.savedJobs.map(j => /*#__PURE__*/React.createElement(JobCard, {
+    key: j.id,
+    j: j,
+    saved: true
+  }))));
 }
 
 /* ================= MODULE 4: RESUME TAILOR ================= */
-function ResumeTailor({db}){
-  const ai=useAI(db);
-  const [jd,setJd]=useState('');
-  const [res,setRes]=useState(null);
-  const go=async()=>{
+function ResumeTailor({
+  db
+}) {
+  const ai = useAI(db);
+  const [jd, setJd] = useState('');
+  const [res, setRes] = useState(null);
+  const go = async () => {
     setRes(null);
-    const text=await ai.run({
-      system:'You are an ATS and resume expert for Indian BFSI hiring. Compare the candidate resume vs the JD. Return ONLY JSON: {"ats":0-100,"keywords":[{"kw":"…","present":true/false}] (top 10 from JD),"rewrites":[{"current":"existing bullet","improved":"rewritten bullet with JD keywords + metrics"}] (3-5),"summary":"2-line tailored professional summary for this JD"}',
-      user:`${PROFILE_PROMPT}\n\nTARGET JD:\n${jd}`,max:3000});
-    if(!text)return;
-    try{setRes(jparse(text));}catch(e){ai.setErr('Parse failed, try again.');}
+    const text = await ai.run({
+      system: 'You are an ATS and resume expert for Indian BFSI hiring. Compare the candidate resume vs the JD. Return ONLY JSON: {"ats":0-100,"keywords":[{"kw":"…","present":true/false}] (top 10 from JD),"rewrites":[{"current":"existing bullet","improved":"rewritten bullet with JD keywords + metrics"}] (3-5),"summary":"2-line tailored professional summary for this JD"}',
+      user: `${PROFILE_PROMPT}\n\nTARGET JD:\n${jd}`,
+      max: 3000
+    });
+    if (!text) return;
+    try {
+      setRes(jparse(text));
+    } catch (e) {
+      ai.setErr('Parse failed, try again.');
+    }
   };
-  const dl=()=>{
-    let t=`RESUME TAILORING — ${dkey()}\nATS SCORE: ${res.ats}/100\n\nTAILORED SUMMARY:\n${res.summary}\n\nKEYWORDS:\n`;
-    res.keywords.forEach(k=>t+=`${k.present?'[✓]':'[MISSING]'} ${k.kw}\n`);
-    t+='\nBULLET REWRITES:\n';
-    res.rewrites.forEach((r,i)=>t+=`\n${i+1}. CURRENT: ${r.current}\n   IMPROVED: ${r.improved}\n`);
-    downloadText('resume-tailoring.txt',t);
+  const dl = () => {
+    let t = `RESUME TAILORING — ${dkey()}\nATS SCORE: ${res.ats}/100\n\nTAILORED SUMMARY:\n${res.summary}\n\nKEYWORDS:\n`;
+    res.keywords.forEach(k => t += `${k.present ? '[✓]' : '[MISSING]'} ${k.kw}\n`);
+    t += '\nBULLET REWRITES:\n';
+    res.rewrites.forEach((r, i) => t += `\n${i + 1}. CURRENT: ${r.current}\n   IMPROVED: ${r.improved}\n`);
+    downloadText('resume-tailoring.txt', t);
   };
-  return (<Card title="Resume tailor" sub="Paste a JD — get keywords, ATS score & bullet rewrites">
-    <textarea className="inp" rows="7" placeholder="Paste the job description…" value={jd} onChange={e=>setJd(e.target.value)}/>
-    <Btn className="w-full mt-3" onClick={go} disabled={ai.busy||!jd.trim()}>Tailor my resume</Btn>
-    {ai.busy&&<Busy/>}<Err msg={ai.err}/>
-    {res&&<div className="mt-3 space-y-3">
-      <div className="flex items-center gap-3">
-        <div className="clock font-bold text-4xl" style={{color:res.ats>=70?'#00FF94':res.ats>=50?'#F4A623':'#F85149'}}>{res.ats}</div>
-        <div className="text-xs text-mut">ATS score vs this JD</div>
-      </div>
-      <div className="flex flex-wrap gap-1.5">
-        {res.keywords.map((k,i)=><span key={i} className="badge" style={k.present?{background:'rgba(0,255,148,.12)',color:'#00FF94'}:{background:'rgba(248,81,73,.12)',color:'#F85149'}}>{k.present?'✓ ':'✗ '}{k.kw}</span>)}
-      </div>
-      <div className="out">{res.summary}</div>
-      {res.rewrites.map((r,i)=>(
-        <div key={i} className="border border-line rounded-xl p-3 text-[13px]">
-          <div className="text-mut line-through decoration-[#F85149]/50">{r.current}</div>
-          <div className="text-acc mt-1.5">→ {r.improved}</div>
-          <Btn small variant="g" className="mt-2" onClick={()=>copyText(r.improved,'Bullet')}>Copy</Btn>
-        </div>))}
-      <Btn variant="a" className="w-full" onClick={dl}>Download as .txt</Btn>
-    </div>}
-  </Card>);
+  return /*#__PURE__*/React.createElement(Card, {
+    title: "Resume tailor",
+    sub: "Paste a JD — get keywords, ATS score & bullet rewrites"
+  }, /*#__PURE__*/React.createElement("textarea", {
+    className: "inp",
+    rows: "7",
+    placeholder: "Paste the job description…",
+    value: jd,
+    onChange: e => setJd(e.target.value)
+  }), /*#__PURE__*/React.createElement(Btn, {
+    className: "w-full mt-3",
+    onClick: go,
+    disabled: ai.busy || !jd.trim()
+  }, "Tailor my resume"), ai.busy && /*#__PURE__*/React.createElement(Busy, null), /*#__PURE__*/React.createElement(Err, {
+    msg: ai.err
+  }), res && /*#__PURE__*/React.createElement("div", {
+    className: "mt-3 space-y-3"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-3"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "clock font-bold text-4xl",
+    style: {
+      color: res.ats >= 70 ? '#00FF94' : res.ats >= 50 ? '#F4A623' : '#F85149'
+    }
+  }, res.ats), /*#__PURE__*/React.createElement("div", {
+    className: "text-xs text-mut"
+  }, "ATS score vs this JD")), /*#__PURE__*/React.createElement("div", {
+    className: "flex flex-wrap gap-1.5"
+  }, res.keywords.map((k, i) => /*#__PURE__*/React.createElement("span", {
+    key: i,
+    className: "badge",
+    style: k.present ? {
+      background: 'rgba(0,255,148,.12)',
+      color: '#00FF94'
+    } : {
+      background: 'rgba(248,81,73,.12)',
+      color: '#F85149'
+    }
+  }, k.present ? '✓ ' : '✗ ', k.kw))), /*#__PURE__*/React.createElement("div", {
+    className: "out"
+  }, res.summary), res.rewrites.map((r, i) => /*#__PURE__*/React.createElement("div", {
+    key: i,
+    className: "border border-line rounded-xl p-3 text-[13px]"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "text-mut line-through decoration-[#F85149]/50"
+  }, r.current), /*#__PURE__*/React.createElement("div", {
+    className: "text-acc mt-1.5"
+  }, "→ ", r.improved), /*#__PURE__*/React.createElement(Btn, {
+    small: true,
+    variant: "g",
+    className: "mt-2",
+    onClick: () => copyText(r.improved, 'Bullet')
+  }, "Copy"))), /*#__PURE__*/React.createElement(Btn, {
+    variant: "a",
+    className: "w-full",
+    onClick: dl
+  }, "Download as .txt")));
 }
 
 /* ================= MODULE 5: COVER LETTER ================= */
-function CoverLetter({db}){
-  const ai=useAI(db);
-  const [f,setF]=useState({company:'',role:'',jd:'',tone:'Professional'});
-  const [out,setOut]=useState('');
-  const go=async()=>{
-    const text=await ai.run({
-      system:`Write a personalized cover letter for an Indian BFSI operations professional. Tone: ${f.tone}. Max 250 words. No placeholders like [Name] — use the actual candidate details. Specific to the company and JD, achievement-led, no clichés like "I am writing to express". Return only the letter.`,
-      user:`${PROFILE_PROMPT}\n\nCOMPANY: ${f.company}\nROLE: ${f.role}\nJD:\n${f.jd}`});
-    if(text)setOut(text);
+function CoverLetter({
+  db
+}) {
+  const ai = useAI(db);
+  const [f, setF] = useState({
+    company: '',
+    role: '',
+    jd: '',
+    tone: 'Professional'
+  });
+  const [out, setOut] = useState('');
+  const go = async () => {
+    const text = await ai.run({
+      system: `Write a personalized cover letter for an Indian BFSI operations professional. Tone: ${f.tone}. Max 250 words. No placeholders like [Name] — use the actual candidate details. Specific to the company and JD, achievement-led, no clichés like "I am writing to express". Return only the letter.`,
+      user: `${PROFILE_PROMPT}\n\nCOMPANY: ${f.company}\nROLE: ${f.role}\nJD:\n${f.jd}`
+    });
+    if (text) setOut(text);
   };
-  return (<Card title="Cover letter generator">
-    <div className="grid grid-cols-2 gap-2">
-      <div><Lbl>Company</Lbl><input className="inp" value={f.company} onChange={e=>setF({...f,company:e.target.value})}/></div>
-      <div><Lbl>Role</Lbl><input className="inp" value={f.role} onChange={e=>setF({...f,role:e.target.value})}/></div>
-    </div>
-    <Lbl>Tone</Lbl><select className="inp" value={f.tone} onChange={e=>setF({...f,tone:e.target.value})}>
-      {['Professional','Confident','Concise'].map(t=><option key={t}>{t}</option>)}</select>
-    <Lbl>Paste JD</Lbl><textarea className="inp" rows="5" value={f.jd} onChange={e=>setF({...f,jd:e.target.value})}/>
-    <Btn className="w-full mt-3" onClick={go} disabled={ai.busy||!f.company||!f.role}>Generate letter</Btn>
-    {ai.busy&&<Busy/>}<Err msg={ai.err}/>
-    {out&&<div className="mt-3">
-      <textarea className="inp" rows="12" value={out} onChange={e=>setOut(e.target.value)}/>
-      <Btn variant="a" className="w-full mt-2" onClick={()=>copyText(out,'Cover letter')}>Copy to clipboard</Btn>
-    </div>}
-  </Card>);
+  return /*#__PURE__*/React.createElement(Card, {
+    title: "Cover letter generator"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "grid grid-cols-2 gap-2"
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(Lbl, null, "Company"), /*#__PURE__*/React.createElement("input", {
+    className: "inp",
+    value: f.company,
+    onChange: e => setF({
+      ...f,
+      company: e.target.value
+    })
+  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(Lbl, null, "Role"), /*#__PURE__*/React.createElement("input", {
+    className: "inp",
+    value: f.role,
+    onChange: e => setF({
+      ...f,
+      role: e.target.value
+    })
+  }))), /*#__PURE__*/React.createElement(Lbl, null, "Tone"), /*#__PURE__*/React.createElement("select", {
+    className: "inp",
+    value: f.tone,
+    onChange: e => setF({
+      ...f,
+      tone: e.target.value
+    })
+  }, ['Professional', 'Confident', 'Concise'].map(t => /*#__PURE__*/React.createElement("option", {
+    key: t
+  }, t))), /*#__PURE__*/React.createElement(Lbl, null, "Paste JD"), /*#__PURE__*/React.createElement("textarea", {
+    className: "inp",
+    rows: "5",
+    value: f.jd,
+    onChange: e => setF({
+      ...f,
+      jd: e.target.value
+    })
+  }), /*#__PURE__*/React.createElement(Btn, {
+    className: "w-full mt-3",
+    onClick: go,
+    disabled: ai.busy || !f.company || !f.role
+  }, "Generate letter"), ai.busy && /*#__PURE__*/React.createElement(Busy, null), /*#__PURE__*/React.createElement(Err, {
+    msg: ai.err
+  }), out && /*#__PURE__*/React.createElement("div", {
+    className: "mt-3"
+  }, /*#__PURE__*/React.createElement("textarea", {
+    className: "inp",
+    rows: "12",
+    value: out,
+    onChange: e => setOut(e.target.value)
+  }), /*#__PURE__*/React.createElement(Btn, {
+    variant: "a",
+    className: "w-full mt-2",
+    onClick: () => copyText(out, 'Cover letter')
+  }, "Copy to clipboard")));
 }
 
 /* ================= MODULE 6: INTERVIEW PREP ================= */
-function InterviewPrep({db,up}){
-  const ai=useAI(db);
-  const [f,setF]=useState({company:'',jd:''});
-  const [qs,setQs]=useState([]);
-  const [sel,setSel]=useState(-1);
-  const [ans,setAns]=useState('');
-  const [fb,setFb]=useState('');
-  const [brief,setBrief]=useState('');
-  const genQ=async()=>{
-    setQs([]);setSel(-1);setFb('');
-    const text=await ai.run({
-      system:'Generate the 10 most likely interview questions for this specific role and company, for an Indian BFSI operations candidate at AM level. Mix: domain (401k/ops), behavioral, leadership, situational. Return ONLY a JSON array of 10 strings.',
-      user:`${PROFILE_PROMPT}\n\nCOMPANY: ${f.company}\nJD:\n${f.jd}`});
-    if(!text)return;
-    try{const arr=jparse(text);setQs(arr);
-      up(d=>{d.prep[f.company||'General']={date:dkey(),jd:f.jd,questions:arr,qa:[],brief:''};});
-      toast('Prep session saved');
-    }catch(e){ai.setErr('Parse failed, try again.');}
-  };
-  const getFb=async()=>{
+function InterviewPrep({
+  db,
+  up
+}) {
+  const ai = useAI(db);
+  const [f, setF] = useState({
+    company: '',
+    jd: ''
+  });
+  const [qs, setQs] = useState([]);
+  const [sel, setSel] = useState(-1);
+  const [ans, setAns] = useState('');
+  const [fb, setFb] = useState('');
+  const [brief, setBrief] = useState('');
+  const genQ = async () => {
+    setQs([]);
+    setSel(-1);
     setFb('');
-    const text=await ai.run({
-      system:'You are a tough but fair interview coach. Give feedback on the candidate answer: 1) Strengths 2) What is weak or missing 3) A stronger suggested answer using STAR with their real achievements. Be direct, no sugarcoating. Plain text.',
-      user:`${PROFILE_PROMPT}\n\nQUESTION: ${qs[sel]}\nCANDIDATE ANSWER: ${ans}`});
-    if(text){setFb(text);
-      up(d=>{const s=d.prep[f.company||'General'];if(s)s.qa.push({q:qs[sel],a:ans,fb:text});});}
+    const text = await ai.run({
+      system: 'Generate the 10 most likely interview questions for this specific role and company, for an Indian BFSI operations candidate at AM level. Mix: domain (401k/ops), behavioral, leadership, situational. Return ONLY a JSON array of 10 strings.',
+      user: `${PROFILE_PROMPT}\n\nCOMPANY: ${f.company}\nJD:\n${f.jd}`
+    });
+    if (!text) return;
+    try {
+      const arr = jparse(text);
+      setQs(arr);
+      up(d => {
+        d.prep[f.company || 'General'] = {
+          date: dkey(),
+          jd: f.jd,
+          questions: arr,
+          qa: [],
+          brief: ''
+        };
+      });
+      toast('Prep session saved');
+    } catch (e) {
+      ai.setErr('Parse failed, try again.');
+    }
   };
-  const getBrief=async()=>{
+  const getFb = async () => {
+    setFb('');
+    const text = await ai.run({
+      system: 'You are a tough but fair interview coach. Give feedback on the candidate answer: 1) Strengths 2) What is weak or missing 3) A stronger suggested answer using STAR with their real achievements. Be direct, no sugarcoating. Plain text.',
+      user: `${PROFILE_PROMPT}\n\nQUESTION: ${qs[sel]}\nCANDIDATE ANSWER: ${ans}`
+    });
+    if (text) {
+      setFb(text);
+      up(d => {
+        const s = d.prep[f.company || 'General'];
+        if (s) s.qa.push({
+          q: qs[sel],
+          a: ans,
+          fb: text
+        });
+      });
+    }
+  };
+  const getBrief = async () => {
     setBrief('');
-    const text=await ai.run({
-      system:'Research this company with web search. Give a concise interview-prep brief: what they do, size/scale in India, culture signals, recent news (last 6 months), and 2 smart questions the candidate should ask. Plain text, under 250 words.',
-      user:`Company: ${f.company}. Candidate is interviewing for: BFSI operations AM-level role.`,
-      tools:WEB_SEARCH,max:2000});
-    if(text){setBrief(text);up(d=>{const s=d.prep[f.company||'General'];if(s)s.brief=text;});}
+    const text = await ai.run({
+      system: 'Research this company with web search. Give a concise interview-prep brief: what they do, size/scale in India, culture signals, recent news (last 6 months), and 2 smart questions the candidate should ask. Plain text, under 250 words.',
+      user: `Company: ${f.company}. Candidate is interviewing for: BFSI operations AM-level role.`,
+      tools: WEB_SEARCH,
+      max: 2000
+    });
+    if (text) {
+      setBrief(text);
+      up(d => {
+        const s = d.prep[f.company || 'General'];
+        if (s) s.brief = text;
+      });
+    }
   };
-  const sessions=Object.entries(db.prep);
-  return (<div className="space-y-3">
-    <Card title="Interview prep">
-      <Lbl>Company</Lbl><input className="inp" value={f.company} onChange={e=>setF({...f,company:e.target.value})}/>
-      <Lbl>Paste JD</Lbl><textarea className="inp" rows="4" value={f.jd} onChange={e=>setF({...f,jd:e.target.value})}/>
-      <div className="flex gap-2 mt-3">
-        <Btn className="flex-1" onClick={genQ} disabled={ai.busy||!f.jd.trim()}>Generate questions</Btn>
-        <Btn variant="a" onClick={getBrief} disabled={ai.busy||!f.company.trim()}>Company brief</Btn>
-      </div>
-      {ai.busy&&<Busy/>}<Err msg={ai.err}/>
-      <Out text={brief}/>
-      {qs.length>0&&<div className="mt-3 space-y-1.5">
-        {qs.map((q,i)=>(
-          <button key={i} onClick={()=>{setSel(i);setFb('');setAns('');}}
-            className={`w-full text-left text-[13px] p-2.5 rounded-xl border ${sel===i?'border-acc text-acc':'border-line text-mut'}`}>
-            <span className="font-mono text-[11px] mr-1">{String(i+1).padStart(2,'0')}</span> {q}
-          </button>))}
-      </div>}
-      {sel>-1&&<div className="mt-3">
-        <Lbl>Your mock answer</Lbl>
-        <textarea className="inp" rows="4" value={ans} onChange={e=>setAns(e.target.value)} placeholder="Type your answer the way you'd say it…"/>
-        <Btn className="w-full mt-2" onClick={getFb} disabled={ai.busy||!ans.trim()}>Get honest feedback</Btn>
-        <Out text={fb}/>
-      </div>}
-    </Card>
-    {sessions.length>0&&<Card title="Saved prep sessions">
-      {sessions.map(([co,s])=>(
-        <div key={co} className="flex items-center justify-between py-1.5 border-b border-line last:border-0">
-          <div className="text-sm">{co} <span className="text-xs text-mut">· {s.date} · {s.questions.length} Qs · {s.qa.length} answered</span></div>
-          <Btn small variant="g" onClick={()=>{setF({company:co,jd:s.jd});setQs(s.questions);setBrief(s.brief||'');setSel(-1);}}>Load</Btn>
-        </div>))}
-    </Card>}
-  </div>);
+  const sessions = Object.entries(db.prep);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "space-y-3"
+  }, /*#__PURE__*/React.createElement(Card, {
+    title: "Interview prep"
+  }, /*#__PURE__*/React.createElement(Lbl, null, "Company"), /*#__PURE__*/React.createElement("input", {
+    className: "inp",
+    value: f.company,
+    onChange: e => setF({
+      ...f,
+      company: e.target.value
+    })
+  }), /*#__PURE__*/React.createElement(Lbl, null, "Paste JD"), /*#__PURE__*/React.createElement("textarea", {
+    className: "inp",
+    rows: "4",
+    value: f.jd,
+    onChange: e => setF({
+      ...f,
+      jd: e.target.value
+    })
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "flex gap-2 mt-3"
+  }, /*#__PURE__*/React.createElement(Btn, {
+    className: "flex-1",
+    onClick: genQ,
+    disabled: ai.busy || !f.jd.trim()
+  }, "Generate questions"), /*#__PURE__*/React.createElement(Btn, {
+    variant: "a",
+    onClick: getBrief,
+    disabled: ai.busy || !f.company.trim()
+  }, "Company brief")), ai.busy && /*#__PURE__*/React.createElement(Busy, null), /*#__PURE__*/React.createElement(Err, {
+    msg: ai.err
+  }), /*#__PURE__*/React.createElement(Out, {
+    text: brief
+  }), qs.length > 0 && /*#__PURE__*/React.createElement("div", {
+    className: "mt-3 space-y-1.5"
+  }, qs.map((q, i) => /*#__PURE__*/React.createElement("button", {
+    key: i,
+    onClick: () => {
+      setSel(i);
+      setFb('');
+      setAns('');
+    },
+    className: `w-full text-left text-[13px] p-2.5 rounded-xl border ${sel === i ? 'border-acc text-acc' : 'border-line text-mut'}`
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "font-mono text-[11px] mr-1"
+  }, String(i + 1).padStart(2, '0')), " ", q))), sel > -1 && /*#__PURE__*/React.createElement("div", {
+    className: "mt-3"
+  }, /*#__PURE__*/React.createElement(Lbl, null, "Your mock answer"), /*#__PURE__*/React.createElement("textarea", {
+    className: "inp",
+    rows: "4",
+    value: ans,
+    onChange: e => setAns(e.target.value),
+    placeholder: "Type your answer the way you'd say it…"
+  }), /*#__PURE__*/React.createElement(Btn, {
+    className: "w-full mt-2",
+    onClick: getFb,
+    disabled: ai.busy || !ans.trim()
+  }, "Get honest feedback"), /*#__PURE__*/React.createElement(Out, {
+    text: fb
+  }))), sessions.length > 0 && /*#__PURE__*/React.createElement(Card, {
+    title: "Saved prep sessions"
+  }, sessions.map(([co, s]) => /*#__PURE__*/React.createElement("div", {
+    key: co,
+    className: "flex items-center justify-between py-1.5 border-b border-line last:border-0"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "text-sm"
+  }, co, " ", /*#__PURE__*/React.createElement("span", {
+    className: "text-xs text-mut"
+  }, "· ", s.date, " · ", s.questions.length, " Qs · ", s.qa.length, " answered")), /*#__PURE__*/React.createElement(Btn, {
+    small: true,
+    variant: "g",
+    onClick: () => {
+      setF({
+        company: co,
+        jd: s.jd
+      });
+      setQs(s.questions);
+      setBrief(s.brief || '');
+      setSel(-1);
+    }
+  }, "Load")))));
 }
 
 /* ================= MODULE 7: FOLLOW-UP EMAIL ================= */
-function FollowUp({db}){
-  const ai=useAI(db);
-  const [appId,setAppId]=useState('');
-  const [tone,setTone]=useState('Polite');
-  const [out,setOut]=useState('');
-  const go=async()=>{
-    const a=db.apps.find(x=>x.id===+appId);
-    const days=Math.floor((new Date()-new Date(a.date))/864e5);
-    const text=await ai.run({
-      system:`Draft a follow-up email for a job application. Tone: ${tone}. Under 130 words. Include subject line. No placeholders — use real candidate details. Reference the role, days elapsed, and add one line of value (a relevant achievement). Return only the email.`,
-      user:`${PROFILE_PROMPT}\n\nAPPLICATION: ${a.role} at ${a.company}, applied ${days} days ago via ${a.source}. Current status: ${a.status}. Notes: ${a.notes||'none'}`});
-    if(text)setOut(text);
+function FollowUp({
+  db
+}) {
+  const ai = useAI(db);
+  const [appId, setAppId] = useState('');
+  const [tone, setTone] = useState('Polite');
+  const [out, setOut] = useState('');
+  const go = async () => {
+    const a = db.apps.find(x => x.id === +appId);
+    const days = Math.floor((new Date() - new Date(a.date)) / 864e5);
+    const text = await ai.run({
+      system: `Draft a follow-up email for a job application. Tone: ${tone}. Under 130 words. Include subject line. No placeholders — use real candidate details. Reference the role, days elapsed, and add one line of value (a relevant achievement). Return only the email.`,
+      user: `${PROFILE_PROMPT}\n\nAPPLICATION: ${a.role} at ${a.company}, applied ${days} days ago via ${a.source}. Current status: ${a.status}. Notes: ${a.notes || 'none'}`
+    });
+    if (text) setOut(text);
   };
-  return (<Card title="Follow-up email drafter">
-    {!db.apps.length?<Empty>Add applications in the Tracker first.</Empty>:<div>
-      <Lbl>Application</Lbl>
-      <select className="inp" value={appId} onChange={e=>setAppId(e.target.value)}>
-        <option value="">Select application…</option>
-        {db.apps.map(a=><option key={a.id} value={a.id}>{a.company} — {a.role} ({a.status})</option>)}
-      </select>
-      <Lbl>Tone</Lbl>
-      <select className="inp" value={tone} onChange={e=>setTone(e.target.value)}>
-        <option>Polite</option><option>Assertive</option>
-      </select>
-      <Btn className="w-full mt-3" onClick={go} disabled={ai.busy||!appId}>Draft follow-up</Btn>
-      {ai.busy&&<Busy/>}<Err msg={ai.err}/>
-      {out&&<div className="mt-3">
-        <textarea className="inp" rows="9" value={out} onChange={e=>setOut(e.target.value)}/>
-        <Btn variant="a" className="w-full mt-2" onClick={()=>copyText(out,'Email')}>Copy to clipboard</Btn>
-      </div>}
-    </div>}
-  </Card>);
+  return /*#__PURE__*/React.createElement(Card, {
+    title: "Follow-up email drafter"
+  }, !db.apps.length ? /*#__PURE__*/React.createElement(Empty, null, "Add applications in the Tracker first.") : /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(Lbl, null, "Application"), /*#__PURE__*/React.createElement("select", {
+    className: "inp",
+    value: appId,
+    onChange: e => setAppId(e.target.value)
+  }, /*#__PURE__*/React.createElement("option", {
+    value: ""
+  }, "Select application…"), db.apps.map(a => /*#__PURE__*/React.createElement("option", {
+    key: a.id,
+    value: a.id
+  }, a.company, " — ", a.role, " (", a.status, ")"))), /*#__PURE__*/React.createElement(Lbl, null, "Tone"), /*#__PURE__*/React.createElement("select", {
+    className: "inp",
+    value: tone,
+    onChange: e => setTone(e.target.value)
+  }, /*#__PURE__*/React.createElement("option", null, "Polite"), /*#__PURE__*/React.createElement("option", null, "Assertive")), /*#__PURE__*/React.createElement(Btn, {
+    className: "w-full mt-3",
+    onClick: go,
+    disabled: ai.busy || !appId
+  }, "Draft follow-up"), ai.busy && /*#__PURE__*/React.createElement(Busy, null), /*#__PURE__*/React.createElement(Err, {
+    msg: ai.err
+  }), out && /*#__PURE__*/React.createElement("div", {
+    className: "mt-3"
+  }, /*#__PURE__*/React.createElement("textarea", {
+    className: "inp",
+    rows: "9",
+    value: out,
+    onChange: e => setOut(e.target.value)
+  }), /*#__PURE__*/React.createElement(Btn, {
+    variant: "a",
+    className: "w-full mt-2",
+    onClick: () => copyText(out, 'Email')
+  }, "Copy to clipboard"))));
 }
 
 /* ================= MODULE 8: SKILL GAP ANALYZER ================= */
-function SkillGap({db,up}){
-  const ai=useAI(db);
-  const [role,setRole]=useState('Operations Manager');
-  const go=async()=>{
-    const text=await ai.run({
-      system:'Identify skill gaps between the candidate and the target role in Indian BFSI. Return ONLY JSON array (5-8 items): [{"skill":"…","priority":"High/Medium/Low","why":"one line","resource":"one specific free/cheap learning resource"}]. Only genuine gaps — do not list skills they already have.',
-      user:`${PROFILE_PROMPT}\n\nTARGET ROLE: ${role}`});
-    if(!text)return;
-    try{const arr=jparse(text).map(g=>({...g,id:Date.now()+Math.random(),status:'gap',role}));
-      up(d=>{d.gaps=[...d.gaps.filter(g=>g.role!==role),...arr];});toast('Gap analysis saved');
-    }catch(e){ai.setErr('Parse failed, try again.');}
+function SkillGap({
+  db,
+  up
+}) {
+  const ai = useAI(db);
+  const [role, setRole] = useState('Operations Manager');
+  const go = async () => {
+    const text = await ai.run({
+      system: 'Identify skill gaps between the candidate and the target role in Indian BFSI. Return ONLY JSON array (5-8 items): [{"skill":"…","priority":"High/Medium/Low","why":"one line","resource":"one specific free/cheap learning resource"}]. Only genuine gaps — do not list skills they already have.',
+      user: `${PROFILE_PROMPT}\n\nTARGET ROLE: ${role}`
+    });
+    if (!text) return;
+    try {
+      const arr = jparse(text).map(g => ({
+        ...g,
+        id: Date.now() + Math.random(),
+        status: 'gap',
+        role
+      }));
+      up(d => {
+        d.gaps = [...d.gaps.filter(g => g.role !== role), ...arr];
+      });
+      toast('Gap analysis saved');
+    } catch (e) {
+      ai.setErr('Parse failed, try again.');
+    }
   };
-  const PC={High:'#F85149',Medium:'#F4A623',Low:'#8B949E'};
-  return (<Card title="Skill gap analyzer" sub="Find what's missing for your target role">
-    <Lbl>Target role</Lbl>
-    <select className="inp" value={role} onChange={e=>setRole(e.target.value)}>
-      {PROFILE.targetRoles.map(r=><option key={r}>{r}</option>)}
-    </select>
-    <Btn className="w-full mt-3" onClick={go} disabled={ai.busy}>Analyze gaps</Btn>
-    {ai.busy&&<Busy/>}<Err msg={ai.err}/>
-    <div className="mt-3 space-y-2">
-      {db.gaps.map(g=>(
-        <div key={g.id} className="border border-line rounded-xl p-3 text-[13px]">
-          <div className="flex items-center justify-between gap-2">
-            <span className="font-semibold">{g.skill}</span>
-            <span className="badge" style={{background:PC[g.priority]+'22',color:PC[g.priority]}}>{g.priority}</span>
-          </div>
-          <div className="text-xs text-mut mt-1">{g.why}</div>
-          <div className="text-xs text-acc mt-1">📚 {g.resource}</div>
-          <div className="flex gap-1.5 mt-2">
-            {['gap','learning','acquired'].map(s=>(
-              <button key={s} onClick={()=>up(d=>{const x=d.gaps.find(p=>p.id===g.id);x.status=s;})}
-                className={`btn btn-sm ${g.status===s?'btn-p':'btn-g'}`}>{s}</button>))}
-          </div>
-        </div>))}
-    </div>
-  </Card>);
+  const PC = {
+    High: '#F85149',
+    Medium: '#F4A623',
+    Low: '#8B949E'
+  };
+  return /*#__PURE__*/React.createElement(Card, {
+    title: "Skill gap analyzer",
+    sub: "Find what's missing for your target role"
+  }, /*#__PURE__*/React.createElement(Lbl, null, "Target role"), /*#__PURE__*/React.createElement("select", {
+    className: "inp",
+    value: role,
+    onChange: e => setRole(e.target.value)
+  }, PROFILE.targetRoles.map(r => /*#__PURE__*/React.createElement("option", {
+    key: r
+  }, r))), /*#__PURE__*/React.createElement(Btn, {
+    className: "w-full mt-3",
+    onClick: go,
+    disabled: ai.busy
+  }, "Analyze gaps"), ai.busy && /*#__PURE__*/React.createElement(Busy, null), /*#__PURE__*/React.createElement(Err, {
+    msg: ai.err
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "mt-3 space-y-2"
+  }, db.gaps.map(g => /*#__PURE__*/React.createElement("div", {
+    key: g.id,
+    className: "border border-line rounded-xl p-3 text-[13px]"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center justify-between gap-2"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "font-semibold"
+  }, g.skill), /*#__PURE__*/React.createElement("span", {
+    className: "badge",
+    style: {
+      background: PC[g.priority] + '22',
+      color: PC[g.priority]
+    }
+  }, g.priority)), /*#__PURE__*/React.createElement("div", {
+    className: "text-xs text-mut mt-1"
+  }, g.why), /*#__PURE__*/React.createElement("div", {
+    className: "text-xs text-acc mt-1"
+  }, "📚 ", g.resource), /*#__PURE__*/React.createElement("div", {
+    className: "flex gap-1.5 mt-2"
+  }, ['gap', 'learning', 'acquired'].map(s => /*#__PURE__*/React.createElement("button", {
+    key: s,
+    onClick: () => up(d => {
+      const x = d.gaps.find(p => p.id === g.id);
+      x.status = s;
+    }),
+    className: `btn btn-sm ${g.status === s ? 'btn-p' : 'btn-g'}`
+  }, s)))))));
 }
 
 /* ================= MODULE 9: SALARY NEGOTIATION COACH ================= */
-function SalaryCoach({db}){
-  const ai=useAI(db);
-  const [f,setF]=useState({ctc:'',role:'',company:'',loc:'Delhi NCR'});
-  const [out,setOut]=useState('');
-  const go=async()=>{
+function SalaryCoach({
+  db
+}) {
+  const ai = useAI(db);
+  const [f, setF] = useState({
+    ctc: '',
+    role: '',
+    company: '',
+    loc: 'Delhi NCR'
+  });
+  const [out, setOut] = useState('');
+  const go = async () => {
     setOut('');
-    const text=await ai.run({
-      system:'You are a salary negotiation coach for Indian BFSI. Use web search for current market data. Output sections: 1) MARKET RATE for this role/location in India (range in LPA, cite source type), 2) VERDICT: Accept / Negotiate / Reject — one blunt line with reasoning vs candidate 5+ yrs experience and 14 LPA target, 3) COUNTER-OFFER SCRIPT: exact words to say, with a specific number, 4) LEVERAGE POINTS: 3 bullets from their real achievements. Be brutally honest. Plain text.',
-      user:`${PROFILE_PROMPT}\n\nOFFER: ${f.ctc} LPA for ${f.role} at ${f.company}, ${f.loc}.`,
-      tools:WEB_SEARCH,max:2500});
-    if(text)setOut(text);
+    const text = await ai.run({
+      system: 'You are a salary negotiation coach for Indian BFSI. Use web search for current market data. Output sections: 1) MARKET RATE for this role/location in India (range in LPA, cite source type), 2) VERDICT: Accept / Negotiate / Reject — one blunt line with reasoning vs candidate 5+ yrs experience and 14 LPA target, 3) COUNTER-OFFER SCRIPT: exact words to say, with a specific number, 4) LEVERAGE POINTS: 3 bullets from their real achievements. Be brutally honest. Plain text.',
+      user: `${PROFILE_PROMPT}\n\nOFFER: ${f.ctc} LPA for ${f.role} at ${f.company}, ${f.loc}.`,
+      tools: WEB_SEARCH,
+      max: 2500
+    });
+    if (text) setOut(text);
   };
-  return (<Card title="Salary negotiation coach">
-    <div className="grid grid-cols-2 gap-2">
-      <div><Lbl>Offered CTC (LPA)</Lbl><input className="inp" type="number" value={f.ctc} onChange={e=>setF({...f,ctc:e.target.value})} placeholder="e.g. 12"/></div>
-      <div><Lbl>Location</Lbl><input className="inp" value={f.loc} onChange={e=>setF({...f,loc:e.target.value})}/></div>
-    </div>
-    <Lbl>Role</Lbl><input className="inp" value={f.role} onChange={e=>setF({...f,role:e.target.value})}/>
-    <Lbl>Company</Lbl><input className="inp" value={f.company} onChange={e=>setF({...f,company:e.target.value})}/>
-    <Btn className="w-full mt-3" onClick={go} disabled={ai.busy||!f.ctc||!f.role}>Coach me</Btn>
-    {ai.busy&&<Busy msg="Checking market rates…"/>}<Err msg={ai.err}/>
-    <Out text={out}/>
-    {out&&<Btn variant="a" className="w-full mt-2" onClick={()=>copyText(out,'Analysis')}>Copy</Btn>}
-  </Card>);
+  return /*#__PURE__*/React.createElement(Card, {
+    title: "Salary negotiation coach"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "grid grid-cols-2 gap-2"
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(Lbl, null, "Offered CTC (LPA)"), /*#__PURE__*/React.createElement("input", {
+    className: "inp",
+    type: "number",
+    value: f.ctc,
+    onChange: e => setF({
+      ...f,
+      ctc: e.target.value
+    }),
+    placeholder: "e.g. 12"
+  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(Lbl, null, "Location"), /*#__PURE__*/React.createElement("input", {
+    className: "inp",
+    value: f.loc,
+    onChange: e => setF({
+      ...f,
+      loc: e.target.value
+    })
+  }))), /*#__PURE__*/React.createElement(Lbl, null, "Role"), /*#__PURE__*/React.createElement("input", {
+    className: "inp",
+    value: f.role,
+    onChange: e => setF({
+      ...f,
+      role: e.target.value
+    })
+  }), /*#__PURE__*/React.createElement(Lbl, null, "Company"), /*#__PURE__*/React.createElement("input", {
+    className: "inp",
+    value: f.company,
+    onChange: e => setF({
+      ...f,
+      company: e.target.value
+    })
+  }), /*#__PURE__*/React.createElement(Btn, {
+    className: "w-full mt-3",
+    onClick: go,
+    disabled: ai.busy || !f.ctc || !f.role
+  }, "Coach me"), ai.busy && /*#__PURE__*/React.createElement(Busy, {
+    msg: "Checking market rates…"
+  }), /*#__PURE__*/React.createElement(Err, {
+    msg: ai.err
+  }), /*#__PURE__*/React.createElement(Out, {
+    text: out
+  }), out && /*#__PURE__*/React.createElement(Btn, {
+    variant: "a",
+    className: "w-full mt-2",
+    onClick: () => copyText(out, 'Analysis')
+  }, "Copy"));
 }
 
 /* ================= MODULE 10: LINKEDIN OPTIMIZER ================= */
-function LinkedInOpt({db}){
-  const ai=useAI(db);
-  const [f,setF]=useState({headline:'',about:'',role:'Assistant Manager – Operations'});
-  const [res,setRes]=useState(null);
-  const go=async()=>{
+function LinkedInOpt({
+  db
+}) {
+  const ai = useAI(db);
+  const [f, setF] = useState({
+    headline: '',
+    about: '',
+    role: 'Assistant Manager – Operations'
+  });
+  const [res, setRes] = useState(null);
+  const go = async () => {
     setRes(null);
-    const text=await ai.run({
-      system:'Rewrite LinkedIn profile sections for an Indian BFSI ops professional targeting AM-level roles. Inject ATS/recruiter keywords naturally. Return ONLY JSON: {"headline":"under 220 chars","about":"first-person, achievement-led, with line breaks as \\n, under 200 words","skills":["top 15 skills to list"]}',
-      user:`${PROFILE_PROMPT}\n\nCURRENT HEADLINE: ${f.headline||'(none)'}\nCURRENT ABOUT: ${f.about||'(none)'}\nTARGET ROLE: ${f.role}`,max:2500});
-    if(!text)return;
-    try{setRes(jparse(text));}catch(e){ai.setErr('Parse failed, try again.');}
+    const text = await ai.run({
+      system: 'Rewrite LinkedIn profile sections for an Indian BFSI ops professional targeting AM-level roles. Inject ATS/recruiter keywords naturally. Return ONLY JSON: {"headline":"under 220 chars","about":"first-person, achievement-led, with line breaks as \\n, under 200 words","skills":["top 15 skills to list"]}',
+      user: `${PROFILE_PROMPT}\n\nCURRENT HEADLINE: ${f.headline || '(none)'}\nCURRENT ABOUT: ${f.about || '(none)'}\nTARGET ROLE: ${f.role}`,
+      max: 2500
+    });
+    if (!text) return;
+    try {
+      setRes(jparse(text));
+    } catch (e) {
+      ai.setErr('Parse failed, try again.');
+    }
   };
-  return (<Card title="LinkedIn optimizer">
-    <Lbl>Current headline</Lbl><input className="inp" value={f.headline} onChange={e=>setF({...f,headline:e.target.value})}/>
-    <Lbl>Current about section</Lbl><textarea className="inp" rows="4" value={f.about} onChange={e=>setF({...f,about:e.target.value})}/>
-    <Lbl>Target role</Lbl><input className="inp" value={f.role} onChange={e=>setF({...f,role:e.target.value})}/>
-    <Btn className="w-full mt-3" onClick={go} disabled={ai.busy}>Optimize</Btn>
-    {ai.busy&&<Busy/>}<Err msg={ai.err}/>
-    {res&&<div className="mt-3 space-y-3">
-      <div>
-        <div className="flex justify-between items-center"><Lbl>New headline</Lbl><Btn small variant="g" onClick={()=>copyText(res.headline,'Headline')}>Copy</Btn></div>
-        {f.headline&&<div className="text-xs text-mut line-through mb-1">{f.headline}</div>}
-        <div className="out !mt-0">{res.headline}</div>
-      </div>
-      <div>
-        <div className="flex justify-between items-center"><Lbl>New about</Lbl><Btn small variant="g" onClick={()=>copyText(res.about,'About')}>Copy</Btn></div>
-        <div className="out !mt-0">{res.about}</div>
-      </div>
-      <div>
-        <div className="flex justify-between items-center"><Lbl>Skills list</Lbl><Btn small variant="g" onClick={()=>copyText(res.skills.join(', '),'Skills')}>Copy</Btn></div>
-        <div className="flex flex-wrap gap-1.5">{res.skills.map((s,i)=><span key={i} className="badge" style={{background:'rgba(0,255,148,.1)',color:'#00FF94'}}>{s}</span>)}</div>
-      </div>
-    </div>}
-  </Card>);
+  return /*#__PURE__*/React.createElement(Card, {
+    title: "LinkedIn optimizer"
+  }, /*#__PURE__*/React.createElement(Lbl, null, "Current headline"), /*#__PURE__*/React.createElement("input", {
+    className: "inp",
+    value: f.headline,
+    onChange: e => setF({
+      ...f,
+      headline: e.target.value
+    })
+  }), /*#__PURE__*/React.createElement(Lbl, null, "Current about section"), /*#__PURE__*/React.createElement("textarea", {
+    className: "inp",
+    rows: "4",
+    value: f.about,
+    onChange: e => setF({
+      ...f,
+      about: e.target.value
+    })
+  }), /*#__PURE__*/React.createElement(Lbl, null, "Target role"), /*#__PURE__*/React.createElement("input", {
+    className: "inp",
+    value: f.role,
+    onChange: e => setF({
+      ...f,
+      role: e.target.value
+    })
+  }), /*#__PURE__*/React.createElement(Btn, {
+    className: "w-full mt-3",
+    onClick: go,
+    disabled: ai.busy
+  }, "Optimize"), ai.busy && /*#__PURE__*/React.createElement(Busy, null), /*#__PURE__*/React.createElement(Err, {
+    msg: ai.err
+  }), res && /*#__PURE__*/React.createElement("div", {
+    className: "mt-3 space-y-3"
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    className: "flex justify-between items-center"
+  }, /*#__PURE__*/React.createElement(Lbl, null, "New headline"), /*#__PURE__*/React.createElement(Btn, {
+    small: true,
+    variant: "g",
+    onClick: () => copyText(res.headline, 'Headline')
+  }, "Copy")), f.headline && /*#__PURE__*/React.createElement("div", {
+    className: "text-xs text-mut line-through mb-1"
+  }, f.headline), /*#__PURE__*/React.createElement("div", {
+    className: "out !mt-0"
+  }, res.headline)), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    className: "flex justify-between items-center"
+  }, /*#__PURE__*/React.createElement(Lbl, null, "New about"), /*#__PURE__*/React.createElement(Btn, {
+    small: true,
+    variant: "g",
+    onClick: () => copyText(res.about, 'About')
+  }, "Copy")), /*#__PURE__*/React.createElement("div", {
+    className: "out !mt-0"
+  }, res.about)), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    className: "flex justify-between items-center"
+  }, /*#__PURE__*/React.createElement(Lbl, null, "Skills list"), /*#__PURE__*/React.createElement(Btn, {
+    small: true,
+    variant: "g",
+    onClick: () => copyText(res.skills.join(', '), 'Skills')
+  }, "Copy")), /*#__PURE__*/React.createElement("div", {
+    className: "flex flex-wrap gap-1.5"
+  }, res.skills.map((s, i) => /*#__PURE__*/React.createElement("span", {
+    key: i,
+    className: "badge",
+    style: {
+      background: 'rgba(0,255,148,.1)',
+      color: '#00FF94'
+    }
+  }, s))))));
 }
 
 /* ================= MODULE 13: COLD OUTREACH ================= */
-function ColdOutreach({db}){
-  const ai=useAI(db);
-  const [f,setF]=useState({company:'',hm:'',role:''});
-  const [res,setRes]=useState(null);
-  const go=async()=>{
+function ColdOutreach({
+  db
+}) {
+  const ai = useAI(db);
+  const [f, setF] = useState({
+    company: '',
+    hm: '',
+    role: ''
+  });
+  const [res, setRes] = useState(null);
+  const go = async () => {
     setRes(null);
-    const text=await ai.run({
-      system:'Write cold outreach for an Indian BFSI ops professional. Professional but human, zero cringe, no "I hope this finds you well". Return ONLY JSON: {"connect":"LinkedIn connection note UNDER 280 chars","referral":"referral request email with subject, under 120 words","dm":"recruiter cold DM, under 80 words"}',
-      user:`${PROFILE_PROMPT}\n\nCOMPANY: ${f.company}\nHIRING MANAGER: ${f.hm||'unknown'}\nROLE: ${f.role}`,max:2000});
-    if(!text)return;
-    try{setRes(jparse(text));}catch(e){ai.setErr('Parse failed, try again.');}
+    const text = await ai.run({
+      system: 'Write cold outreach for an Indian BFSI ops professional. Professional but human, zero cringe, no "I hope this finds you well". Return ONLY JSON: {"connect":"LinkedIn connection note UNDER 280 chars","referral":"referral request email with subject, under 120 words","dm":"recruiter cold DM, under 80 words"}',
+      user: `${PROFILE_PROMPT}\n\nCOMPANY: ${f.company}\nHIRING MANAGER: ${f.hm || 'unknown'}\nROLE: ${f.role}`,
+      max: 2000
+    });
+    if (!text) return;
+    try {
+      setRes(jparse(text));
+    } catch (e) {
+      ai.setErr('Parse failed, try again.');
+    }
   };
-  return (<Card title="Cold outreach generator">
-    <Lbl>Company</Lbl><input className="inp" value={f.company} onChange={e=>setF({...f,company:e.target.value})}/>
-    <div className="grid grid-cols-2 gap-2">
-      <div><Lbl>Hiring manager (optional)</Lbl><input className="inp" value={f.hm} onChange={e=>setF({...f,hm:e.target.value})}/></div>
-      <div><Lbl>Role</Lbl><input className="inp" value={f.role} onChange={e=>setF({...f,role:e.target.value})}/></div>
-    </div>
-    <Btn className="w-full mt-3" onClick={go} disabled={ai.busy||!f.company||!f.role}>Generate outreach</Btn>
-    {ai.busy&&<Busy/>}<Err msg={ai.err}/>
-    {res&&<div className="mt-3 space-y-3">
-      {[['LinkedIn connection note',res.connect,res.connect.length+'/300 chars'],['Referral request email',res.referral,''],['Recruiter cold DM',res.dm,'']].map(([t,c,meta])=>(
-        <div key={t}>
-          <div className="flex justify-between items-center"><Lbl>{t} {meta&&<span className="normal-case text-acc">({meta})</span>}</Lbl><Btn small variant="g" onClick={()=>copyText(c,t)}>Copy</Btn></div>
-          <div className="out !mt-0">{c}</div>
-        </div>))}
-    </div>}
-  </Card>);
+  return /*#__PURE__*/React.createElement(Card, {
+    title: "Cold outreach generator"
+  }, /*#__PURE__*/React.createElement(Lbl, null, "Company"), /*#__PURE__*/React.createElement("input", {
+    className: "inp",
+    value: f.company,
+    onChange: e => setF({
+      ...f,
+      company: e.target.value
+    })
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "grid grid-cols-2 gap-2"
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(Lbl, null, "Hiring manager (optional)"), /*#__PURE__*/React.createElement("input", {
+    className: "inp",
+    value: f.hm,
+    onChange: e => setF({
+      ...f,
+      hm: e.target.value
+    })
+  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(Lbl, null, "Role"), /*#__PURE__*/React.createElement("input", {
+    className: "inp",
+    value: f.role,
+    onChange: e => setF({
+      ...f,
+      role: e.target.value
+    })
+  }))), /*#__PURE__*/React.createElement(Btn, {
+    className: "w-full mt-3",
+    onClick: go,
+    disabled: ai.busy || !f.company || !f.role
+  }, "Generate outreach"), ai.busy && /*#__PURE__*/React.createElement(Busy, null), /*#__PURE__*/React.createElement(Err, {
+    msg: ai.err
+  }), res && /*#__PURE__*/React.createElement("div", {
+    className: "mt-3 space-y-3"
+  }, [['LinkedIn connection note', res.connect, res.connect.length + '/300 chars'], ['Referral request email', res.referral, ''], ['Recruiter cold DM', res.dm, '']].map(([t, c, meta]) => /*#__PURE__*/React.createElement("div", {
+    key: t
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex justify-between items-center"
+  }, /*#__PURE__*/React.createElement(Lbl, null, t, " ", meta && /*#__PURE__*/React.createElement("span", {
+    className: "normal-case text-acc"
+  }, "(", meta, ")")), /*#__PURE__*/React.createElement(Btn, {
+    small: true,
+    variant: "g",
+    onClick: () => copyText(c, t)
+  }, "Copy")), /*#__PURE__*/React.createElement("div", {
+    className: "out !mt-0"
+  }, c)))));
 }
 
 /* ================= MODULE 18: COMPANY RESEARCH ================= */
-function Research({db,up}){
-  const ai=useAI(db);
-  const [co,setCo]=useState('');
-  const [out,setOut]=useState('');
-  const go=async()=>{
+function Research({
+  db,
+  up
+}) {
+  const ai = useAI(db);
+  const [co, setCo] = useState('');
+  const [out, setOut] = useState('');
+  const go = async () => {
     setOut('');
-    const text=await ai.run({
-      system:'Research this company with web search for a BFSI ops job seeker in India. Output sections: WHAT THEY DO, SIZE & INDIA PRESENCE, CULTURE & GLASSDOOR SENTIMENT, RECENT NEWS (last 6 months), RED FLAGS (be honest — layoffs, toxic reviews, instability), VERDICT: "Should I apply?" one blunt line. Under 300 words. Plain text.',
-      user:`Company: ${co}. Candidate: 5+ yrs BFSI ops, targeting AM-level roles in Delhi NCR/Pune, 14+ LPA.`,
-      tools:WEB_SEARCH,max:2500});
-    if(text){setOut(text);up(d=>{d.research[co]={date:dkey(),text};});toast('Research saved');}
+    const text = await ai.run({
+      system: 'Research this company with web search for a BFSI ops job seeker in India. Output sections: WHAT THEY DO, SIZE & INDIA PRESENCE, CULTURE & GLASSDOOR SENTIMENT, RECENT NEWS (last 6 months), RED FLAGS (be honest — layoffs, toxic reviews, instability), VERDICT: "Should I apply?" one blunt line. Under 300 words. Plain text.',
+      user: `Company: ${co}. Candidate: 5+ yrs BFSI ops, targeting AM-level roles in Delhi NCR/Pune, 14+ LPA.`,
+      tools: WEB_SEARCH,
+      max: 2500
+    });
+    if (text) {
+      setOut(text);
+      up(d => {
+        d.research[co] = {
+          date: dkey(),
+          text
+        };
+      });
+      toast('Research saved');
+    }
   };
-  const saved=Object.entries(db.research);
-  return (<div className="space-y-3">
-    <Card title="Company research brief" sub="Live web research with red-flag check">
-      <div className="flex gap-2">
-        <input className="inp flex-1" placeholder="Company name…" value={co} onChange={e=>setCo(e.target.value)}/>
-        <Btn onClick={go} disabled={ai.busy||!co.trim()}>Research</Btn>
-      </div>
-      {ai.busy&&<Busy msg="Researching the web…"/>}<Err msg={ai.err}/>
-      <Out text={out}/>
-    </Card>
-    {saved.length>0&&<Card title="Saved research">
-      {saved.map(([c,r])=>(
-        <div key={c} className="flex items-center justify-between py-1.5 border-b border-line last:border-0">
-          <div className="text-sm">{c} <span className="text-xs text-mut">· {r.date}</span></div>
-          <Btn small variant="g" onClick={()=>{setCo(c);setOut(r.text);}}>View</Btn>
-        </div>))}
-    </Card>}
-  </div>);
+  const saved = Object.entries(db.research);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "space-y-3"
+  }, /*#__PURE__*/React.createElement(Card, {
+    title: "Company research brief",
+    sub: "Live web research with red-flag check"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex gap-2"
+  }, /*#__PURE__*/React.createElement("input", {
+    className: "inp flex-1",
+    placeholder: "Company name…",
+    value: co,
+    onChange: e => setCo(e.target.value)
+  }), /*#__PURE__*/React.createElement(Btn, {
+    onClick: go,
+    disabled: ai.busy || !co.trim()
+  }, "Research")), ai.busy && /*#__PURE__*/React.createElement(Busy, {
+    msg: "Researching the web…"
+  }), /*#__PURE__*/React.createElement(Err, {
+    msg: ai.err
+  }), /*#__PURE__*/React.createElement(Out, {
+    text: out
+  })), saved.length > 0 && /*#__PURE__*/React.createElement(Card, {
+    title: "Saved research"
+  }, saved.map(([c, r]) => /*#__PURE__*/React.createElement("div", {
+    key: c,
+    className: "flex items-center justify-between py-1.5 border-b border-line last:border-0"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "text-sm"
+  }, c, " ", /*#__PURE__*/React.createElement("span", {
+    className: "text-xs text-mut"
+  }, "· ", r.date)), /*#__PURE__*/React.createElement(Btn, {
+    small: true,
+    variant: "g",
+    onClick: () => {
+      setCo(c);
+      setOut(r.text);
+    }
+  }, "View")))));
 }
 
 /* ================= MODULE 19: ATS SCANNER ================= */
-function ATSScanner({db}){
-  const ai=useAI(db);
-  const [resume,setResume]=useState(BASE_RESUME);
-  const [jd,setJd]=useState('');
-  const [res,setRes]=useState(null);
-  const go=async()=>{
+function ATSScanner({
+  db
+}) {
+  const ai = useAI(db);
+  const [resume, setResume] = useState(BASE_RESUME);
+  const [jd, setJd] = useState('');
+  const [res, setRes] = useState(null);
+  const go = async () => {
     setRes(null);
-    const text=await ai.run({
-      system:'You are an ATS simulation engine. Scan the resume against the JD. Return ONLY JSON: {"score":0-100,"missing":["keywords absent from resume but in JD"],"formatting":["concrete ATS formatting issues, or empty array if clean"],"fixes":["3-5 specific, copy-pasteable changes to make"]}',
-      user:`RESUME:\n${resume}\n\nJOB DESCRIPTION:\n${jd}`,max:2500});
-    if(!text)return;
-    try{setRes(jparse(text));}catch(e){ai.setErr('Parse failed, try again.');}
+    const text = await ai.run({
+      system: 'You are an ATS simulation engine. Scan the resume against the JD. Return ONLY JSON: {"score":0-100,"missing":["keywords absent from resume but in JD"],"formatting":["concrete ATS formatting issues, or empty array if clean"],"fixes":["3-5 specific, copy-pasteable changes to make"]}',
+      user: `RESUME:\n${resume}\n\nJOB DESCRIPTION:\n${jd}`,
+      max: 2500
+    });
+    if (!text) return;
+    try {
+      setRes(jparse(text));
+    } catch (e) {
+      ai.setErr('Parse failed, try again.');
+    }
   };
-  return (<Card title="ATS resume scanner" sub="Base resume pre-loaded — edit if needed">
-    <Lbl>Resume text</Lbl><textarea className="inp" rows="6" value={resume} onChange={e=>setResume(e.target.value)}/>
-    <Lbl>Job description</Lbl><textarea className="inp" rows="5" value={jd} onChange={e=>setJd(e.target.value)}/>
-    <Btn className="w-full mt-3" onClick={go} disabled={ai.busy||!jd.trim()}>Scan</Btn>
-    {ai.busy&&<Busy/>}<Err msg={ai.err}/>
-    {res&&<div className="mt-3 space-y-2 text-[13px]">
-      <div className="clock font-bold text-4xl" style={{color:res.score>=70?'#00FF94':res.score>=50?'#F4A623':'#F85149'}}>{res.score}<span className="text-sm text-mut">/100</span></div>
-      <div><span className="text-[#F85149] font-semibold">Missing keywords:</span> {res.missing.join(', ')||'none'}</div>
-      <div><span className="text-amb font-semibold">Formatting issues:</span> {res.formatting.length?res.formatting.join(' · '):'clean ✓'}</div>
-      <div className="text-acc font-semibold mt-1">Fixes:</div>
-      {res.fixes.map((x,i)=><div key={i} className="out !mt-1">{i+1}. {x}</div>)}
-    </div>}
-  </Card>);
+  return /*#__PURE__*/React.createElement(Card, {
+    title: "ATS resume scanner",
+    sub: "Base resume pre-loaded — edit if needed"
+  }, /*#__PURE__*/React.createElement(Lbl, null, "Resume text"), /*#__PURE__*/React.createElement("textarea", {
+    className: "inp",
+    rows: "6",
+    value: resume,
+    onChange: e => setResume(e.target.value)
+  }), /*#__PURE__*/React.createElement(Lbl, null, "Job description"), /*#__PURE__*/React.createElement("textarea", {
+    className: "inp",
+    rows: "5",
+    value: jd,
+    onChange: e => setJd(e.target.value)
+  }), /*#__PURE__*/React.createElement(Btn, {
+    className: "w-full mt-3",
+    onClick: go,
+    disabled: ai.busy || !jd.trim()
+  }, "Scan"), ai.busy && /*#__PURE__*/React.createElement(Busy, null), /*#__PURE__*/React.createElement(Err, {
+    msg: ai.err
+  }), res && /*#__PURE__*/React.createElement("div", {
+    className: "mt-3 space-y-2 text-[13px]"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "clock font-bold text-4xl",
+    style: {
+      color: res.score >= 70 ? '#00FF94' : res.score >= 50 ? '#F4A623' : '#F85149'
+    }
+  }, res.score, /*#__PURE__*/React.createElement("span", {
+    className: "text-sm text-mut"
+  }, "/100")), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {
+    className: "text-[#F85149] font-semibold"
+  }, "Missing keywords:"), " ", res.missing.join(', ') || 'none'), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {
+    className: "text-amb font-semibold"
+  }, "Formatting issues:"), " ", res.formatting.length ? res.formatting.join(' · ') : 'clean ✓'), /*#__PURE__*/React.createElement("div", {
+    className: "text-acc font-semibold mt-1"
+  }, "Fixes:"), res.fixes.map((x, i) => /*#__PURE__*/React.createElement("div", {
+    key: i,
+    className: "out !mt-1"
+  }, i + 1, ". ", x))));
 }
 
 /* ================= MODULE 12: REJECTION ANALYZER ================= */
-function RejectionAnalyzer({db,up}){
-  const ai=useAI(db);
-  const [f,setF]=useState({company:'',stage:'Resume Rejected',note:''});
-  const [out,setOut]=useState('');
-  const all=[...db.rejections,...db.apps.filter(a=>a.status==='Rejected'&&a.rejectionStage).map(a=>({company:a.company,stage:a.rejectionStage,note:a.notes,date:a.date})),
-    ...db.apps.filter(a=>a.status==='Ghosted').map(a=>({company:a.company,stage:'Ghosted',note:a.notes,date:a.date}))];
-  const log=()=>{
-    if(!f.company)return toast('Company required');
-    up(d=>{d.rejections.push({...f,id:Date.now(),date:dkey()});});
-    setF({company:'',stage:'Resume Rejected',note:''});toast('Rejection logged');
+function RejectionAnalyzer({
+  db,
+  up
+}) {
+  const ai = useAI(db);
+  const [f, setF] = useState({
+    company: '',
+    stage: 'Resume Rejected',
+    note: ''
+  });
+  const [out, setOut] = useState('');
+  const all = [...db.rejections, ...db.apps.filter(a => a.status === 'Rejected' && a.rejectionStage).map(a => ({
+    company: a.company,
+    stage: a.rejectionStage,
+    note: a.notes,
+    date: a.date
+  })), ...db.apps.filter(a => a.status === 'Ghosted').map(a => ({
+    company: a.company,
+    stage: 'Ghosted',
+    note: a.notes,
+    date: a.date
+  }))];
+  const log = () => {
+    if (!f.company) return toast('Company required');
+    up(d => {
+      d.rejections.push({
+        ...f,
+        id: Date.now(),
+        date: dkey()
+      });
+    });
+    setF({
+      company: '',
+      stage: 'Resume Rejected',
+      note: ''
+    });
+    toast('Rejection logged');
   };
-  const analyze=async()=>{
+  const analyze = async () => {
     setOut('');
-    const text=await ai.run({
-      system:'You are a brutally honest career coach. Analyze the rejection pattern. No sugarcoating, no motivational fluff. Output: 1) THE PATTERN — where exactly the candidate keeps dying in the funnel and the most likely root cause, 2) WHAT THIS MEANS — the uncomfortable truth, 3) FIXES — 3 specific actions per failure stage. Plain text, under 300 words.',
-      user:`${PROFILE_PROMPT}\n\nREJECTION LOG:\n${all.map(r=>`- ${r.company}: failed at "${r.stage}" (${r.date||''}) ${r.note||''}`).join('\n')}`});
-    if(text)setOut(text);
+    const text = await ai.run({
+      system: 'You are a brutally honest career coach. Analyze the rejection pattern. No sugarcoating, no motivational fluff. Output: 1) THE PATTERN — where exactly the candidate keeps dying in the funnel and the most likely root cause, 2) WHAT THIS MEANS — the uncomfortable truth, 3) FIXES — 3 specific actions per failure stage. Plain text, under 300 words.',
+      user: `${PROFILE_PROMPT}\n\nREJECTION LOG:\n${all.map(r => `- ${r.company}: failed at "${r.stage}" (${r.date || ''}) ${r.note || ''}`).join('\n')}`
+    });
+    if (text) setOut(text);
   };
-  return (<Card title="Rejection analyzer" sub="Log every rejection. Patterns appear after 3+">
-    <div className="grid grid-cols-2 gap-2">
-      <div><Lbl>Company</Lbl><input className="inp" value={f.company} onChange={e=>setF({...f,company:e.target.value})}/></div>
-      <div><Lbl>Failed at stage</Lbl><select className="inp" value={f.stage} onChange={e=>setF({...f,stage:e.target.value})}>{REJECT_STAGES.map(s=><option key={s}>{s}</option>)}</select></div>
-    </div>
-    <Lbl>Note (optional)</Lbl><input className="inp" value={f.note} onChange={e=>setF({...f,note:e.target.value})}/>
-    <Btn variant="a" className="w-full mt-3" onClick={log}>Log rejection</Btn>
-    <div className="mt-3 space-y-1.5">
-      {all.map((r,i)=>(
-        <div key={i} className="flex justify-between text-[13px] border-b border-line pb-1.5 last:border-0">
-          <span>{r.company} <span className="text-mut text-xs">{r.note}</span></span>
-          <span className="text-[#F85149] text-xs font-semibold">{r.stage}</span>
-        </div>))}
-      {!all.length&&<Empty>No rejections logged. (That's either great, or you're not applying enough.)</Empty>}
-    </div>
-    {all.length>=3&&<Btn className="w-full mt-3" onClick={analyze} disabled={ai.busy}>Analyze pattern — brutal mode</Btn>}
-    {all.length>0&&all.length<3&&<p className="text-xs text-mut mt-2">{3-all.length} more rejection(s) before pattern analysis unlocks.</p>}
-    {ai.busy&&<Busy/>}<Err msg={ai.err}/>
-    <Out text={out}/>
-  </Card>);
+  return /*#__PURE__*/React.createElement(Card, {
+    title: "Rejection analyzer",
+    sub: "Log every rejection. Patterns appear after 3+"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "grid grid-cols-2 gap-2"
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(Lbl, null, "Company"), /*#__PURE__*/React.createElement("input", {
+    className: "inp",
+    value: f.company,
+    onChange: e => setF({
+      ...f,
+      company: e.target.value
+    })
+  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(Lbl, null, "Failed at stage"), /*#__PURE__*/React.createElement("select", {
+    className: "inp",
+    value: f.stage,
+    onChange: e => setF({
+      ...f,
+      stage: e.target.value
+    })
+  }, REJECT_STAGES.map(s => /*#__PURE__*/React.createElement("option", {
+    key: s
+  }, s))))), /*#__PURE__*/React.createElement(Lbl, null, "Note (optional)"), /*#__PURE__*/React.createElement("input", {
+    className: "inp",
+    value: f.note,
+    onChange: e => setF({
+      ...f,
+      note: e.target.value
+    })
+  }), /*#__PURE__*/React.createElement(Btn, {
+    variant: "a",
+    className: "w-full mt-3",
+    onClick: log
+  }, "Log rejection"), /*#__PURE__*/React.createElement("div", {
+    className: "mt-3 space-y-1.5"
+  }, all.map((r, i) => /*#__PURE__*/React.createElement("div", {
+    key: i,
+    className: "flex justify-between text-[13px] border-b border-line pb-1.5 last:border-0"
+  }, /*#__PURE__*/React.createElement("span", null, r.company, " ", /*#__PURE__*/React.createElement("span", {
+    className: "text-mut text-xs"
+  }, r.note)), /*#__PURE__*/React.createElement("span", {
+    className: "text-[#F85149] text-xs font-semibold"
+  }, r.stage))), !all.length && /*#__PURE__*/React.createElement(Empty, null, "No rejections logged. (That's either great, or you're not applying enough.)")), all.length >= 3 && /*#__PURE__*/React.createElement(Btn, {
+    className: "w-full mt-3",
+    onClick: analyze,
+    disabled: ai.busy
+  }, "Analyze pattern — brutal mode"), all.length > 0 && all.length < 3 && /*#__PURE__*/React.createElement("p", {
+    className: "text-xs text-mut mt-2"
+  }, 3 - all.length, " more rejection(s) before pattern analysis unlocks."), ai.busy && /*#__PURE__*/React.createElement(Busy, null), /*#__PURE__*/React.createElement(Err, {
+    msg: ai.err
+  }), /*#__PURE__*/React.createElement(Out, {
+    text: out
+  }));
 }
 
 /* ================= MODULE 11: VELOCITY TRACKER ================= */
-function countByDay(apps,days){
-  const out=[];
-  for(let i=days-1;i>=0;i--){
-    const k=dkey(addDays(new Date(),-i));
-    out.push({day:k.slice(5),n:apps.filter(a=>a.date===k).length});
+function countByDay(apps, days) {
+  const out = [];
+  for (let i = days - 1; i >= 0; i--) {
+    const k = dkey(addDays(new Date(), -i));
+    out.push({
+      day: k.slice(5),
+      n: apps.filter(a => a.date === k).length
+    });
   }
   return out;
 }
-function streakDays(apps){
-  let s=0;
-  for(let i=0;;i++){
-    const k=dkey(addDays(new Date(),-i));
-    const n=apps.filter(a=>a.date===k).length;
-    if(n>0)s++;
-    else if(i===0)continue; // today can still be 0 without breaking streak
+function streakDays(apps) {
+  let s = 0;
+  for (let i = 0;; i++) {
+    const k = dkey(addDays(new Date(), -i));
+    const n = apps.filter(a => a.date === k).length;
+    if (n > 0) s++;else if (i === 0) continue; // today can still be 0 without breaking streak
     else break;
   }
   return s;
 }
-function Velocity({db}){
-  const ref=useRef(null);
-  const data=countByDay(db.apps,14);
-  const last14=data.reduce((a,b)=>a+b.n,0);
-  const rate=last14/14;
-  const dl=daysLeft();
-  const projection=db.apps.length+Math.round(rate*dl);
-  const last7=data.slice(-7).reduce((a,b)=>a+b.n,0);
-  const below=last7<db.dailyTarget*7;
-  const streak=streakDays(db.apps);
-  useEffect(()=>{
-    const c=new Chart(ref.current,{type:'bar',data:{labels:data.map(d=>d.day),datasets:[{data:data.map(d=>d.n),backgroundColor:data.map(d=>d.n>=db.dailyTarget?'#00FF94':'#21262D'),borderRadius:4}]},
-      options:{plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#8B949E',font:{size:9}},grid:{display:false}},y:{ticks:{color:'#8B949E',stepSize:1},grid:{color:'#21262D'}}}}});
-    return ()=>c.destroy();
-  },[db.apps.length]);
-  return (<div className="space-y-3">
-    {below&&<div className="err font-semibold">⚠ PACE ALERT: {last7} apps in last 7 days. Target is {db.dailyTarget*7}. The bond clock doesn't care about your excuses.</div>}
-    <Card title="Application velocity" sub="Last 14 days">
-      <canvas ref={ref} height="160"></canvas>
-      <div className="grid grid-cols-3 gap-2 mt-3 text-center">
-        <div><div className="clock font-bold text-xl text-acc">{streak}</div><div className="text-[11px] text-mut">day streak</div></div>
-        <div><div className="clock font-bold text-xl">{rate.toFixed(1)}</div><div className="text-[11px] text-mut">apps/day</div></div>
-        <div><div className="clock font-bold text-xl text-amb">{projection}</div><div className="text-[11px] text-mut">projected by Oct 31</div></div>
-      </div>
-      <p className="text-xs text-mut mt-3">At this rate you'll have sent <span className="text-amb font-semibold">{projection} total applications</span> by the deadline ({dl} days left). Minimum target: {db.dailyTarget}/day.</p>
-    </Card>
-  </div>);
+function Velocity({
+  db
+}) {
+  const ref = useRef(null);
+  const data = countByDay(db.apps, 14);
+  const last14 = data.reduce((a, b) => a + b.n, 0);
+  const rate = last14 / 14;
+  const dl = daysLeft();
+  const projection = db.apps.length + Math.round(rate * dl);
+  const last7 = data.slice(-7).reduce((a, b) => a + b.n, 0);
+  const below = last7 < db.dailyTarget * 7;
+  const streak = streakDays(db.apps);
+  useEffect(() => {
+    const c = new Chart(ref.current, {
+      type: 'bar',
+      data: {
+        labels: data.map(d => d.day),
+        datasets: [{
+          data: data.map(d => d.n),
+          backgroundColor: data.map(d => d.n >= db.dailyTarget ? '#00FF94' : '#21262D'),
+          borderRadius: 4
+        }]
+      },
+      options: {
+        plugins: {
+          legend: {
+            display: false
+          }
+        },
+        scales: {
+          x: {
+            ticks: {
+              color: '#8B949E',
+              font: {
+                size: 9
+              }
+            },
+            grid: {
+              display: false
+            }
+          },
+          y: {
+            ticks: {
+              color: '#8B949E',
+              stepSize: 1
+            },
+            grid: {
+              color: '#21262D'
+            }
+          }
+        }
+      }
+    });
+    return () => c.destroy();
+  }, [db.apps.length]);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "space-y-3"
+  }, below && /*#__PURE__*/React.createElement("div", {
+    className: "err font-semibold"
+  }, "⚠ PACE ALERT: ", last7, " apps in last 7 days. Target is ", db.dailyTarget * 7, ". The bond clock doesn't care about your excuses."), /*#__PURE__*/React.createElement(Card, {
+    title: "Application velocity",
+    sub: "Last 14 days"
+  }, /*#__PURE__*/React.createElement("canvas", {
+    ref: ref,
+    height: "160"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "grid grid-cols-3 gap-2 mt-3 text-center"
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    className: "clock font-bold text-xl text-acc"
+  }, streak), /*#__PURE__*/React.createElement("div", {
+    className: "text-[11px] text-mut"
+  }, "day streak")), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    className: "clock font-bold text-xl"
+  }, rate.toFixed(1)), /*#__PURE__*/React.createElement("div", {
+    className: "text-[11px] text-mut"
+  }, "apps/day")), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    className: "clock font-bold text-xl text-amb"
+  }, projection), /*#__PURE__*/React.createElement("div", {
+    className: "text-[11px] text-mut"
+  }, "projected by Oct 31"))), /*#__PURE__*/React.createElement("p", {
+    className: "text-xs text-mut mt-3"
+  }, "At this rate you'll have sent ", /*#__PURE__*/React.createElement("span", {
+    className: "text-amb font-semibold"
+  }, projection, " total applications"), " by the deadline (", dl, " days left). Minimum target: ", db.dailyTarget, "/day.")));
 }
 
 /* ================= MODULE 14: OFFER COMPARISON ================= */
-function Offers({db,up}){
-  const ai=useAI(db);
-  const [f,setF]=useState({company:'',role:'',ctc:'',loc:3,growth:3,wlb:3});
-  const [rec,setRec]=useState('');
-  const w=db.weights;
-  const totW=w.salary+w.growth+w.location+w.wlb||1;
-  const maxCtc=Math.max(...db.offers.map(o=>+o.ctc),1);
-  const score=(o)=>Math.round(((+o.ctc/maxCtc)*w.salary+(o.growth/5)*w.growth+(o.loc/5)*w.location+(o.wlb/5)*w.wlb)/totW*100);
-  const add=()=>{
-    if(!f.company||!f.ctc)return toast('Company & CTC required');
-    up(d=>{d.offers.push({...f,id:Date.now()});});
-    setF({company:'',role:'',ctc:'',loc:3,growth:3,wlb:3});toast('Offer added');
+function Offers({
+  db,
+  up
+}) {
+  const ai = useAI(db);
+  const [f, setF] = useState({
+    company: '',
+    role: '',
+    ctc: '',
+    loc: 3,
+    growth: 3,
+    wlb: 3
+  });
+  const [rec, setRec] = useState('');
+  const w = db.weights;
+  const totW = w.salary + w.growth + w.location + w.wlb || 1;
+  const maxCtc = Math.max(...db.offers.map(o => +o.ctc), 1);
+  const score = o => Math.round((+o.ctc / maxCtc * w.salary + o.growth / 5 * w.growth + o.loc / 5 * w.location + o.wlb / 5 * w.wlb) / totW * 100);
+  const add = () => {
+    if (!f.company || !f.ctc) return toast('Company & CTC required');
+    up(d => {
+      d.offers.push({
+        ...f,
+        id: Date.now()
+      });
+    });
+    setF({
+      company: '',
+      role: '',
+      ctc: '',
+      loc: 3,
+      growth: 3,
+      wlb: 3
+    });
+    toast('Offer added');
   };
-  const recommend=async()=>{
+  const recommend = async () => {
     setRec('');
-    const text=await ai.run({
-      system:'Compare these job offers for an Indian BFSI ops professional (target 14+ LPA, prefers Delhi NCR, bond at Genpact till Oct 31 2026). Recommend ONE with blunt reasoning, and note what to negotiate on the runner-up. Under 200 words. Plain text.',
-      user:`${PROFILE_PROMPT}\n\nOFFERS:\n${JSON.stringify(db.offers,null,1)}\n\nUSER WEIGHTS: ${JSON.stringify(w)}`});
-    if(text)setRec(text);
+    const text = await ai.run({
+      system: 'Compare these job offers for an Indian BFSI ops professional (target 14+ LPA, prefers Delhi NCR, bond at Genpact till Oct 31 2026). Recommend ONE with blunt reasoning, and note what to negotiate on the runner-up. Under 200 words. Plain text.',
+      user: `${PROFILE_PROMPT}\n\nOFFERS:\n${JSON.stringify(db.offers, null, 1)}\n\nUSER WEIGHTS: ${JSON.stringify(w)}`
+    });
+    if (text) setRec(text);
   };
-  const Slider=({label,k,obj,set})=>(
-    <div><Lbl>{label}: {obj[k]}</Lbl><input type="range" min="1" max="5" value={obj[k]} onChange={e=>set(k,+e.target.value)}/></div>);
-  return (<div className="space-y-3">
-    <Card title="Add offer">
-      <div className="grid grid-cols-2 gap-2">
-        <div><Lbl>Company</Lbl><input className="inp" value={f.company} onChange={e=>setF({...f,company:e.target.value})}/></div>
-        <div><Lbl>CTC (LPA)</Lbl><input type="number" className="inp" value={f.ctc} onChange={e=>setF({...f,ctc:e.target.value})}/></div>
-      </div>
-      <Lbl>Role</Lbl><input className="inp" value={f.role} onChange={e=>setF({...f,role:e.target.value})}/>
-      <Slider label="Location fit (1-5)" k="loc" obj={f} set={(k,v)=>setF({...f,[k]:v})}/>
-      <Slider label="Growth potential (1-5)" k="growth" obj={f} set={(k,v)=>setF({...f,[k]:v})}/>
-      <Slider label="Work-life balance (1-5)" k="wlb" obj={f} set={(k,v)=>setF({...f,[k]:v})}/>
-      <Btn className="w-full mt-3" onClick={add}>Add offer</Btn>
-    </Card>
-    <Card title="Your weights" sub="How much each factor matters (auto-normalized)">
-      {[['Salary','salary'],['Growth','growth'],['Location','location'],['Work-life','wlb']].map(([l,k])=>(
-        <div key={k}><Lbl>{l}: {w[k]}%</Lbl>
-        <input type="range" min="0" max="100" step="5" value={w[k]} onChange={e=>up(d=>{d.weights[k]=+e.target.value;})}/></div>))}
-    </Card>
-    {db.offers.length>0&&<Card title="Comparison matrix">
-      <div className="overflow-x-auto"><table className="cmp">
-        <thead><tr><th>Company</th><th>CTC</th><th>Loc</th><th>Growth</th><th>WLB</th><th>Score</th><th></th></tr></thead>
-        <tbody>{[...db.offers].sort((a,b)=>score(b)-score(a)).map(o=>(
-          <tr key={o.id}><td className="font-semibold">{o.company}<div className="text-[10px] text-mut">{o.role}</div></td>
-          <td>{o.ctc}L</td><td>{o.loc}/5</td><td>{o.growth}/5</td><td>{o.wlb}/5</td>
-          <td className="clock font-bold text-acc">{score(o)}</td>
-          <td><button className="text-[#F85149] text-xs" onClick={()=>up(d=>{d.offers=d.offers.filter(x=>x.id!==o.id);})}>✕</button></td></tr>))}
-        </tbody></table></div>
-      {db.offers.length>=2&&<Btn className="w-full mt-3" onClick={recommend} disabled={ai.busy}>AI recommendation</Btn>}
-      {ai.busy&&<Busy/>}<Err msg={ai.err}/>
-      <Out text={rec}/>
-    </Card>}
-  </div>);
+  const Slider = ({
+    label,
+    k,
+    obj,
+    set
+  }) => /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(Lbl, null, label, ": ", obj[k]), /*#__PURE__*/React.createElement("input", {
+    type: "range",
+    min: "1",
+    max: "5",
+    value: obj[k],
+    onChange: e => set(k, +e.target.value)
+  }));
+  return /*#__PURE__*/React.createElement("div", {
+    className: "space-y-3"
+  }, /*#__PURE__*/React.createElement(Card, {
+    title: "Add offer"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "grid grid-cols-2 gap-2"
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(Lbl, null, "Company"), /*#__PURE__*/React.createElement("input", {
+    className: "inp",
+    value: f.company,
+    onChange: e => setF({
+      ...f,
+      company: e.target.value
+    })
+  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(Lbl, null, "CTC (LPA)"), /*#__PURE__*/React.createElement("input", {
+    type: "number",
+    className: "inp",
+    value: f.ctc,
+    onChange: e => setF({
+      ...f,
+      ctc: e.target.value
+    })
+  }))), /*#__PURE__*/React.createElement(Lbl, null, "Role"), /*#__PURE__*/React.createElement("input", {
+    className: "inp",
+    value: f.role,
+    onChange: e => setF({
+      ...f,
+      role: e.target.value
+    })
+  }), /*#__PURE__*/React.createElement(Slider, {
+    label: "Location fit (1-5)",
+    k: "loc",
+    obj: f,
+    set: (k, v) => setF({
+      ...f,
+      [k]: v
+    })
+  }), /*#__PURE__*/React.createElement(Slider, {
+    label: "Growth potential (1-5)",
+    k: "growth",
+    obj: f,
+    set: (k, v) => setF({
+      ...f,
+      [k]: v
+    })
+  }), /*#__PURE__*/React.createElement(Slider, {
+    label: "Work-life balance (1-5)",
+    k: "wlb",
+    obj: f,
+    set: (k, v) => setF({
+      ...f,
+      [k]: v
+    })
+  }), /*#__PURE__*/React.createElement(Btn, {
+    className: "w-full mt-3",
+    onClick: add
+  }, "Add offer")), /*#__PURE__*/React.createElement(Card, {
+    title: "Your weights",
+    sub: "How much each factor matters (auto-normalized)"
+  }, [['Salary', 'salary'], ['Growth', 'growth'], ['Location', 'location'], ['Work-life', 'wlb']].map(([l, k]) => /*#__PURE__*/React.createElement("div", {
+    key: k
+  }, /*#__PURE__*/React.createElement(Lbl, null, l, ": ", w[k], "%"), /*#__PURE__*/React.createElement("input", {
+    type: "range",
+    min: "0",
+    max: "100",
+    step: "5",
+    value: w[k],
+    onChange: e => up(d => {
+      d.weights[k] = +e.target.value;
+    })
+  })))), db.offers.length > 0 && /*#__PURE__*/React.createElement(Card, {
+    title: "Comparison matrix"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "overflow-x-auto"
+  }, /*#__PURE__*/React.createElement("table", {
+    className: "cmp"
+  }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", null, "Company"), /*#__PURE__*/React.createElement("th", null, "CTC"), /*#__PURE__*/React.createElement("th", null, "Loc"), /*#__PURE__*/React.createElement("th", null, "Growth"), /*#__PURE__*/React.createElement("th", null, "WLB"), /*#__PURE__*/React.createElement("th", null, "Score"), /*#__PURE__*/React.createElement("th", null))), /*#__PURE__*/React.createElement("tbody", null, [...db.offers].sort((a, b) => score(b) - score(a)).map(o => /*#__PURE__*/React.createElement("tr", {
+    key: o.id
+  }, /*#__PURE__*/React.createElement("td", {
+    className: "font-semibold"
+  }, o.company, /*#__PURE__*/React.createElement("div", {
+    className: "text-[10px] text-mut"
+  }, o.role)), /*#__PURE__*/React.createElement("td", null, o.ctc, "L"), /*#__PURE__*/React.createElement("td", null, o.loc, "/5"), /*#__PURE__*/React.createElement("td", null, o.growth, "/5"), /*#__PURE__*/React.createElement("td", null, o.wlb, "/5"), /*#__PURE__*/React.createElement("td", {
+    className: "clock font-bold text-acc"
+  }, score(o)), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("button", {
+    className: "text-[#F85149] text-xs",
+    onClick: () => up(d => {
+      d.offers = d.offers.filter(x => x.id !== o.id);
+    })
+  }, "✕"))))))), db.offers.length >= 2 && /*#__PURE__*/React.createElement(Btn, {
+    className: "w-full mt-3",
+    onClick: recommend,
+    disabled: ai.busy
+  }, "AI recommendation"), ai.busy && /*#__PURE__*/React.createElement(Busy, null), /*#__PURE__*/React.createElement(Err, {
+    msg: ai.err
+  }), /*#__PURE__*/React.createElement(Out, {
+    text: rec
+  })));
 }
 
 /* ================= MODULE 15: DAILY PLANNER ================= */
-function genTasks(db){
-  const tasks=[];
-  tasks.push(`Apply to ${db.dailyTarget} role${db.dailyTarget>1?'s':''} today (Naukri / LinkedIn / Foundit)`);
-  const due=db.apps.filter(a=>a.status==='Applied'&&a.followUp&&a.followUp<=dkey());
-  if(due.length)tasks.push(`Follow up on ${due[0].company} — ${due[0].role} (due since ${fmt(due[0].followUp)})`);
-  const iv=db.apps.find(a=>['Round 1','Round 2','Final','Shortlisted'].includes(a.status));
-  if(iv)tasks.push(`Prep for ${iv.company} interview (${iv.status}) — run a mock in Interview Prep`);
-  if(tasks.length<3)tasks.push('Send 1 cold outreach to a target company (WNS, SS&C, Broadridge, Aon, Mercer…)');
-  if(tasks.length<3)tasks.push('Research 1 new target company in Company Research');
-  return tasks.slice(0,3).map(t=>({t,done:false}));
+function genTasks(db) {
+  const tasks = [];
+  tasks.push(`Apply to ${db.dailyTarget} role${db.dailyTarget > 1 ? 's' : ''} today (Naukri / LinkedIn / Foundit)`);
+  const due = db.apps.filter(a => a.status === 'Applied' && a.followUp && a.followUp <= dkey());
+  if (due.length) tasks.push(`Follow up on ${due[0].company} — ${due[0].role} (due since ${fmt(due[0].followUp)})`);
+  const iv = db.apps.find(a => ['Round 1', 'Round 2', 'Final', 'Shortlisted'].includes(a.status));
+  if (iv) tasks.push(`Prep for ${iv.company} interview (${iv.status}) — run a mock in Interview Prep`);
+  if (tasks.length < 3) tasks.push('Send 1 cold outreach to a target company (WNS, SS&C, Broadridge, Aon, Mercer…)');
+  if (tasks.length < 3) tasks.push('Research 1 new target company in Company Research');
+  return tasks.slice(0, 3).map(t => ({
+    t,
+    done: false
+  }));
 }
-function taskStreak(db){
-  let s=0;
-  for(let i=0;;i++){
-    const k=dkey(addDays(new Date(),-i));
-    const day=db.tasks[k];
-    const ok=day&&day.some(t=>t.done);
-    if(ok)s++;
-    else if(i===0)continue;
-    else break;
+function taskStreak(db) {
+  let s = 0;
+  for (let i = 0;; i++) {
+    const k = dkey(addDays(new Date(), -i));
+    const day = db.tasks[k];
+    const ok = day && day.some(t => t.done);
+    if (ok) s++;else if (i === 0) continue;else break;
   }
   return s;
 }
-function Planner({db,up}){
-  const today=dkey();
-  useEffect(()=>{if(!db.tasks[today])up(d=>{d.tasks[today]=genTasks(d);});},[]);
-  const tasks=db.tasks[today]||[];
-  const dl=daysLeft();
-  const rate=countByDay(db.apps,14).reduce((a,b)=>a+b.n,0)/14;
-  const onTrack=rate>=db.dailyTarget;
-  return (<div className="space-y-3">
-    <Card title="Today's plan" sub={fmt(new Date())} right={<span className="badge" style={{background:'rgba(0,255,148,.12)',color:'#00FF94'}}>🔥 {taskStreak(db)} day streak</span>}>
-      {tasks.map((t,i)=>(
-        <label key={i} className="flex items-start gap-3 py-2 border-b border-line last:border-0 cursor-pointer">
-          <input type="checkbox" checked={t.done} onChange={()=>up(d=>{d.tasks[today][i].done=!d.tasks[today][i].done;})}
-            className="mt-0.5 w-4 h-4 accent-[#00FF94]"/>
-          <span className={`text-sm ${t.done?'line-through text-mut':''}`}>{t.t}</span>
-        </label>))}
-      <Btn small variant="g" className="mt-3" onClick={()=>{up(d=>{d.tasks[today]=genTasks(d);});toast('Tasks regenerated');}}>Regenerate tasks</Btn>
-    </Card>
-    <Card title="October 31 backward plan">
-      <p className="text-sm">{dl} days left. Current pace: <span className="clock font-bold" style={{color:onTrack?'#00FF94':'#F85149'}}>{rate.toFixed(1)}/day</span> vs target {db.dailyTarget}/day.</p>
-      <p className="text-xs text-mut mt-1">{onTrack?'On track. Keep the machine running.':'Behind pace. Every day under target pushes your exit options closer to the deadline cliff.'}</p>
-    </Card>
-  </div>);
+function Planner({
+  db,
+  up
+}) {
+  const today = dkey();
+  useEffect(() => {
+    if (!db.tasks[today]) up(d => {
+      d.tasks[today] = genTasks(d);
+    });
+  }, []);
+  const tasks = db.tasks[today] || [];
+  const dl = daysLeft();
+  const rate = countByDay(db.apps, 14).reduce((a, b) => a + b.n, 0) / 14;
+  const onTrack = rate >= db.dailyTarget;
+  return /*#__PURE__*/React.createElement("div", {
+    className: "space-y-3"
+  }, /*#__PURE__*/React.createElement(Card, {
+    title: "Today's plan",
+    sub: fmt(new Date()),
+    right: /*#__PURE__*/React.createElement("span", {
+      className: "badge",
+      style: {
+        background: 'rgba(0,255,148,.12)',
+        color: '#00FF94'
+      }
+    }, "🔥 ", taskStreak(db), " day streak")
+  }, tasks.map((t, i) => /*#__PURE__*/React.createElement("label", {
+    key: i,
+    className: "flex items-start gap-3 py-2 border-b border-line last:border-0 cursor-pointer"
+  }, /*#__PURE__*/React.createElement("input", {
+    type: "checkbox",
+    checked: t.done,
+    onChange: () => up(d => {
+      d.tasks[today][i].done = !d.tasks[today][i].done;
+    }),
+    className: "mt-0.5 w-4 h-4 accent-[#00FF94]"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: `text-sm ${t.done ? 'line-through text-mut' : ''}`
+  }, t.t))), /*#__PURE__*/React.createElement(Btn, {
+    small: true,
+    variant: "g",
+    className: "mt-3",
+    onClick: () => {
+      up(d => {
+        d.tasks[today] = genTasks(d);
+      });
+      toast('Tasks regenerated');
+    }
+  }, "Regenerate tasks")), /*#__PURE__*/React.createElement(Card, {
+    title: "October 31 backward plan"
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "text-sm"
+  }, dl, " days left. Current pace: ", /*#__PURE__*/React.createElement("span", {
+    className: "clock font-bold",
+    style: {
+      color: onTrack ? '#00FF94' : '#F85149'
+    }
+  }, rate.toFixed(1), "/day"), " vs target ", db.dailyTarget, "/day."), /*#__PURE__*/React.createElement("p", {
+    className: "text-xs text-mut mt-1"
+  }, onTrack ? 'On track. Keep the machine running.' : 'Behind pace. Every day under target pushes your exit options closer to the deadline cliff.')));
 }
 
 /* ================= MODULE 16: GENPACT EXIT STRATEGY ================= */
-function ExitStrategy({db,up}){
-  const [resign,setResign]=useState(dkey());
-  const notice=db.noticeDays;
-  const lwd=addDays(resign,notice);
-  const join=addDays(lwd,1);
-  const bondDays=Math.round((DEADLINE-BOND_START)/864e5);
-  const remDays=Math.max(0,Math.round((DEADLINE-lwd)/864e5));
-  const breaking=lwd<DEADLINE;
-  const penalty=Math.round(db.bondAmount*(remDays/bondDays));
-  const pct=Math.min(100,Math.max(0,Math.round(((new Date()-BOND_START)/(DEADLINE-BOND_START))*100)));
-  return (<div className="space-y-3">
-    <Card title="Genpact exit strategy" sub="Bond ends Oct 31, 2026 (fixed)">
-      <div className="grid grid-cols-2 gap-2">
-        <div><Lbl>Resignation date</Lbl><input type="date" className="inp" value={resign} onChange={e=>setResign(e.target.value)}/></div>
-        <div><Lbl>Notice period (days)</Lbl><input type="number" className="inp" value={notice} onChange={e=>up(d=>{d.noticeDays=+e.target.value||0;})}/></div>
-      </div>
-      <Lbl>Bond amount (₹)</Lbl><input type="number" className="inp" value={db.bondAmount} onChange={e=>up(d=>{d.bondAmount=+e.target.value||0;})}/>
-      <div className="mt-4 space-y-2 text-sm">
-        <div className="flex justify-between"><span className="text-mut">Last working day</span><span className="clock font-bold">{fmt(lwd)}</span></div>
-        <div className="flex justify-between"><span className="text-mut">Earliest joining date</span><span className="clock font-bold text-acc">{fmt(join)}</span></div>
-        <div className="flex justify-between"><span className="text-mut">Bond status on LWD</span>
-          <span className={`font-bold ${breaking?'text-[#F85149]':'text-acc'}`}>{breaking?`BREAKING — ${remDays} days early`:'CLEAR ✓'}</span></div>
-        {breaking&&<div className="err">Estimated bond penalty (prorated): <span className="clock font-bold">₹{penalty.toLocaleString('en-IN')}</span><br/>
-          <span className="text-xs">Rough estimate only — check your actual bond clause; some bonds are flat, not prorated.</span></div>}
-      </div>
-    </Card>
-    <Card title="Bond timeline">
-      <div className="h-3 rounded-full bg-line overflow-hidden"><div className="h-full bg-acc" style={{width:pct+'%'}}></div></div>
-      <div className="flex justify-between text-[10px] text-mut mt-1 font-mono"><span>Nov 2025</span><span>{pct}% served</span><span>Oct 31 2026</span></div>
-      <p className="text-xs text-mut mt-3">Tip: with a {notice}-day notice, resigning on <span className="text-amb font-semibold">{fmt(addDays(DEADLINE,-notice))}</span> or later means your LWD lands past the bond — clean exit, zero penalty.</p>
-    </Card>
-  </div>);
+function ExitStrategy({
+  db,
+  up
+}) {
+  const [resign, setResign] = useState(dkey());
+  const notice = db.noticeDays;
+  const lwd = addDays(resign, notice);
+  const join = addDays(lwd, 1);
+  const bondDays = Math.round((DEADLINE - BOND_START) / 864e5);
+  const remDays = Math.max(0, Math.round((DEADLINE - lwd) / 864e5));
+  const breaking = lwd < DEADLINE;
+  const penalty = Math.round(db.bondAmount * (remDays / bondDays));
+  const pct = Math.min(100, Math.max(0, Math.round((new Date() - BOND_START) / (DEADLINE - BOND_START) * 100)));
+  return /*#__PURE__*/React.createElement("div", {
+    className: "space-y-3"
+  }, /*#__PURE__*/React.createElement(Card, {
+    title: "Genpact exit strategy",
+    sub: "Bond ends Oct 31, 2026 (fixed)"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "grid grid-cols-2 gap-2"
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(Lbl, null, "Resignation date"), /*#__PURE__*/React.createElement("input", {
+    type: "date",
+    className: "inp",
+    value: resign,
+    onChange: e => setResign(e.target.value)
+  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(Lbl, null, "Notice period (days)"), /*#__PURE__*/React.createElement("input", {
+    type: "number",
+    className: "inp",
+    value: notice,
+    onChange: e => up(d => {
+      d.noticeDays = +e.target.value || 0;
+    })
+  }))), /*#__PURE__*/React.createElement(Lbl, null, "Bond amount (₹)"), /*#__PURE__*/React.createElement("input", {
+    type: "number",
+    className: "inp",
+    value: db.bondAmount,
+    onChange: e => up(d => {
+      d.bondAmount = +e.target.value || 0;
+    })
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "mt-4 space-y-2 text-sm"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex justify-between"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "text-mut"
+  }, "Last working day"), /*#__PURE__*/React.createElement("span", {
+    className: "clock font-bold"
+  }, fmt(lwd))), /*#__PURE__*/React.createElement("div", {
+    className: "flex justify-between"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "text-mut"
+  }, "Earliest joining date"), /*#__PURE__*/React.createElement("span", {
+    className: "clock font-bold text-acc"
+  }, fmt(join))), /*#__PURE__*/React.createElement("div", {
+    className: "flex justify-between"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "text-mut"
+  }, "Bond status on LWD"), /*#__PURE__*/React.createElement("span", {
+    className: `font-bold ${breaking ? 'text-[#F85149]' : 'text-acc'}`
+  }, breaking ? `BREAKING — ${remDays} days early` : 'CLEAR ✓')), breaking && /*#__PURE__*/React.createElement("div", {
+    className: "err"
+  }, "Estimated bond penalty (prorated): ", /*#__PURE__*/React.createElement("span", {
+    className: "clock font-bold"
+  }, "₹", penalty.toLocaleString('en-IN')), /*#__PURE__*/React.createElement("br", null), /*#__PURE__*/React.createElement("span", {
+    className: "text-xs"
+  }, "Rough estimate only — check your actual bond clause; some bonds are flat, not prorated.")))), /*#__PURE__*/React.createElement(Card, {
+    title: "Bond timeline"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "h-3 rounded-full bg-line overflow-hidden"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "h-full bg-acc",
+    style: {
+      width: pct + '%'
+    }
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "flex justify-between text-[10px] text-mut mt-1 font-mono"
+  }, /*#__PURE__*/React.createElement("span", null, "Nov 2025"), /*#__PURE__*/React.createElement("span", null, pct, "% served"), /*#__PURE__*/React.createElement("span", null, "Oct 31 2026")), /*#__PURE__*/React.createElement("p", {
+    className: "text-xs text-mut mt-3"
+  }, "Tip: with a ", notice, "-day notice, resigning on ", /*#__PURE__*/React.createElement("span", {
+    className: "text-amb font-semibold"
+  }, fmt(addDays(DEADLINE, -notice))), " or later means your LWD lands past the bond — clean exit, zero penalty.")));
 }
 
 /* ================= MODULE 17: MENTAL LOAD TRACKER ================= */
-function MentalLoad({db,up}){
-  const ai=useAI(db);
-  const [m,setM]=useState({motivation:3,energy:3,stress:3,pace:3,confidence:3});
-  const [msg,setMsg]=useState('');
-  const ref=useRef(null);
-  const isSunday=new Date().getDay()===0;
-  const lastCheck=db.moods.slice(-1)[0];
-  const save=async()=>{
-    const inv=6-m.stress; // high stress = bad
-    const avg=+( (m.motivation+m.energy+inv+m.pace+m.confidence)/5 ).toFixed(1);
-    const target=avg<2.5?1:avg<3.5?2:3;
-    up(d=>{d.moods.push({date:dkey(),...m,avg});d.dailyTarget=target;});
+function MentalLoad({
+  db,
+  up
+}) {
+  const ai = useAI(db);
+  const [m, setM] = useState({
+    motivation: 3,
+    energy: 3,
+    stress: 3,
+    pace: 3,
+    confidence: 3
+  });
+  const [msg, setMsg] = useState('');
+  const ref = useRef(null);
+  const isSunday = new Date().getDay() === 0;
+  const lastCheck = db.moods.slice(-1)[0];
+  const save = async () => {
+    const inv = 6 - m.stress; // high stress = bad
+    const avg = +((m.motivation + m.energy + inv + m.pace + m.confidence) / 5).toFixed(1);
+    const target = avg < 2.5 ? 1 : avg < 3.5 ? 2 : 3;
+    up(d => {
+      d.moods.push({
+        date: dkey(),
+        ...m,
+        avg
+      });
+      d.dailyTarget = target;
+    });
     toast(`Saved. Daily target adjusted to ${target} apps/day`);
-    const text=await ai.run({
-      system:'You are a no-nonsense but genuinely supportive coach for someone job hunting under a bond deadline. Based on their weekly mood scores (1-5), write ONE short motivational message (2-3 sentences max) specific to their numbers. Not generic. If burnt out, tell them to slow down without guilt. If strong, push them.',
-      user:`Scores this week — motivation:${m.motivation}, energy:${m.energy}, stress:${m.stress} (5=very stressed), pace satisfaction:${m.pace}, confidence:${m.confidence}. Days to deadline: ${daysLeft()}.`,max:400});
-    if(text)setMsg(text);
+    const text = await ai.run({
+      system: 'You are a no-nonsense but genuinely supportive coach for someone job hunting under a bond deadline. Based on their weekly mood scores (1-5), write ONE short motivational message (2-3 sentences max) specific to their numbers. Not generic. If burnt out, tell them to slow down without guilt. If strong, push them.',
+      user: `Scores this week — motivation:${m.motivation}, energy:${m.energy}, stress:${m.stress} (5=very stressed), pace satisfaction:${m.pace}, confidence:${m.confidence}. Days to deadline: ${daysLeft()}.`,
+      max: 400
+    });
+    if (text) setMsg(text);
   };
-  useEffect(()=>{
-    if(!db.moods.length||!ref.current)return;
-    const c=new Chart(ref.current,{type:'line',data:{labels:db.moods.map(x=>x.date.slice(5)),datasets:[{data:db.moods.map(x=>x.avg),borderColor:'#00FF94',backgroundColor:'rgba(0,255,148,.08)',fill:true,tension:.35,pointBackgroundColor:'#00FF94'}]},
-      options:{plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#8B949E',font:{size:9}},grid:{display:false}},y:{min:1,max:5,ticks:{color:'#8B949E'},grid:{color:'#21262D'}}}}});
-    return ()=>c.destroy();
-  },[db.moods.length]);
-  const Q=[['motivation','Motivation'],['energy','Energy'],['stress','Stress level'],['pace','Happy with my pace'],['confidence','Confidence']];
-  return (<div className="space-y-3">
-    {isSunday&&(!lastCheck||lastCheck.date!==dkey())&&<div className="bg-card border border-amb rounded-2xl p-3 text-sm text-amb font-semibold">🔔 It's Sunday — time for your weekly check-in below.</div>}
-    <Card title="Weekly check-in" sub={lastCheck?`Last check-in: ${lastCheck.date} (avg ${lastCheck.avg}/5)`:'Rate each 1–5'}>
-      {Q.map(([k,l])=>(
-        <div key={k}><Lbl>{l}: {m[k]}/5</Lbl>
-        <input type="range" min="1" max="5" value={m[k]} onChange={e=>setM({...m,[k]:+e.target.value})}/></div>))}
-      <Btn className="w-full mt-3" onClick={save} disabled={ai.busy}>Save check-in</Btn>
-      {ai.busy&&<Busy msg="Writing your message…"/>}<Err msg={ai.err}/>
-      {msg&&<div className="out border-acc text-acc">{msg}</div>}
-      <p className="text-xs text-mut mt-2">Current daily target: <span className="text-acc font-bold">{db.dailyTarget} apps/day</span> (auto-adjusted by your check-ins)</p>
-    </Card>
-    {db.moods.length>0&&<Card title="Wellbeing trend"><canvas ref={ref} height="150"></canvas></Card>}
-  </div>);
+  useEffect(() => {
+    if (!db.moods.length || !ref.current) return;
+    const c = new Chart(ref.current, {
+      type: 'line',
+      data: {
+        labels: db.moods.map(x => x.date.slice(5)),
+        datasets: [{
+          data: db.moods.map(x => x.avg),
+          borderColor: '#00FF94',
+          backgroundColor: 'rgba(0,255,148,.08)',
+          fill: true,
+          tension: .35,
+          pointBackgroundColor: '#00FF94'
+        }]
+      },
+      options: {
+        plugins: {
+          legend: {
+            display: false
+          }
+        },
+        scales: {
+          x: {
+            ticks: {
+              color: '#8B949E',
+              font: {
+                size: 9
+              }
+            },
+            grid: {
+              display: false
+            }
+          },
+          y: {
+            min: 1,
+            max: 5,
+            ticks: {
+              color: '#8B949E'
+            },
+            grid: {
+              color: '#21262D'
+            }
+          }
+        }
+      }
+    });
+    return () => c.destroy();
+  }, [db.moods.length]);
+  const Q = [['motivation', 'Motivation'], ['energy', 'Energy'], ['stress', 'Stress level'], ['pace', 'Happy with my pace'], ['confidence', 'Confidence']];
+  return /*#__PURE__*/React.createElement("div", {
+    className: "space-y-3"
+  }, isSunday && (!lastCheck || lastCheck.date !== dkey()) && /*#__PURE__*/React.createElement("div", {
+    className: "bg-card border border-amb rounded-2xl p-3 text-sm text-amb font-semibold"
+  }, "🔔 It's Sunday — time for your weekly check-in below."), /*#__PURE__*/React.createElement(Card, {
+    title: "Weekly check-in",
+    sub: lastCheck ? `Last check-in: ${lastCheck.date} (avg ${lastCheck.avg}/5)` : 'Rate each 1–5'
+  }, Q.map(([k, l]) => /*#__PURE__*/React.createElement("div", {
+    key: k
+  }, /*#__PURE__*/React.createElement(Lbl, null, l, ": ", m[k], "/5"), /*#__PURE__*/React.createElement("input", {
+    type: "range",
+    min: "1",
+    max: "5",
+    value: m[k],
+    onChange: e => setM({
+      ...m,
+      [k]: +e.target.value
+    })
+  }))), /*#__PURE__*/React.createElement(Btn, {
+    className: "w-full mt-3",
+    onClick: save,
+    disabled: ai.busy
+  }, "Save check-in"), ai.busy && /*#__PURE__*/React.createElement(Busy, {
+    msg: "Writing your message…"
+  }), /*#__PURE__*/React.createElement(Err, {
+    msg: ai.err
+  }), msg && /*#__PURE__*/React.createElement("div", {
+    className: "out border-acc text-acc"
+  }, msg), /*#__PURE__*/React.createElement("p", {
+    className: "text-xs text-mut mt-2"
+  }, "Current daily target: ", /*#__PURE__*/React.createElement("span", {
+    className: "text-acc font-bold"
+  }, db.dailyTarget, " apps/day"), " (auto-adjusted by your check-ins)")), db.moods.length > 0 && /*#__PURE__*/React.createElement(Card, {
+    title: "Wellbeing trend"
+  }, /*#__PURE__*/React.createElement("canvas", {
+    ref: ref,
+    height: "150"
+  })));
 }
 
 /* ================= MODULE 20: WEEKLY REVIEW ================= */
-function WeeklyReview({db}){
-  const ai=useAI(db);
-  const [out,setOut]=useState('');
-  const wk=addDays(new Date(),-7);
-  const applied=db.apps.filter(a=>new Date(a.date)>=wk);
-  const interviews=db.apps.filter(a=>['Round 1','Round 2','Final','Shortlisted'].includes(a.status));
-  const rejWk=db.rejections.filter(r=>r.date&&new Date(r.date)>=wk);
-  const target=db.dailyTarget*7;
-  const verdictLocal=applied.length>=target?'ON TRACK':applied.length>=Math.ceil(target/2)?'SLIPPING':'CRITICAL';
-  const vc={'ON TRACK':'#00FF94','SLIPPING':'#F4A623','CRITICAL':'#F85149'}[verdictLocal];
-  const go=async()=>{
+function WeeklyReview({
+  db
+}) {
+  const ai = useAI(db);
+  const [out, setOut] = useState('');
+  const wk = addDays(new Date(), -7);
+  const applied = db.apps.filter(a => new Date(a.date) >= wk);
+  const interviews = db.apps.filter(a => ['Round 1', 'Round 2', 'Final', 'Shortlisted'].includes(a.status));
+  const rejWk = db.rejections.filter(r => r.date && new Date(r.date) >= wk);
+  const target = db.dailyTarget * 7;
+  const verdictLocal = applied.length >= target ? 'ON TRACK' : applied.length >= Math.ceil(target / 2) ? 'SLIPPING' : 'CRITICAL';
+  const vc = {
+    'ON TRACK': '#00FF94',
+    'SLIPPING': '#F4A623',
+    'CRITICAL': '#F85149'
+  }[verdictLocal];
+  const go = async () => {
     setOut('');
-    const text=await ai.run({
-      system:'Write a weekly job-hunt review. Sections: WHAT HAPPENED (facts), WHAT WAS MISSED, NEXT WEEK TARGETS (3 specific, numbered), then end with exactly one line: VERDICT: On track / Slipping / Critical — plus one brutally honest sentence. Under 200 words. Plain text.',
-      user:`${PROFILE_PROMPT}\n\nTHIS WEEK: ${applied.length} applications (target ${target}). Active interviews: ${interviews.map(a=>a.company+' ('+a.status+')').join(', ')||'none'}. Rejections this week: ${rejWk.length}. Pipeline: ${db.apps.length} total apps, ${db.apps.filter(a=>a.status==='Offer').length} offers. Days to bond end: ${daysLeft()}.`});
-    if(text)setOut(text);
+    const text = await ai.run({
+      system: 'Write a weekly job-hunt review. Sections: WHAT HAPPENED (facts), WHAT WAS MISSED, NEXT WEEK TARGETS (3 specific, numbered), then end with exactly one line: VERDICT: On track / Slipping / Critical — plus one brutally honest sentence. Under 200 words. Plain text.',
+      user: `${PROFILE_PROMPT}\n\nTHIS WEEK: ${applied.length} applications (target ${target}). Active interviews: ${interviews.map(a => a.company + ' (' + a.status + ')').join(', ') || 'none'}. Rejections this week: ${rejWk.length}. Pipeline: ${db.apps.length} total apps, ${db.apps.filter(a => a.status === 'Offer').length} offers. Days to bond end: ${daysLeft()}.`
+    });
+    if (text) setOut(text);
   };
-  return (<Card title="Weekly review" sub={`Week of ${fmt(wk)} → ${fmt(new Date())}`}
-    right={<span className="badge font-mono" style={{background:vc+'22',color:vc}}>{verdictLocal}</span>}>
-    <div className="grid grid-cols-3 gap-2 text-center my-2">
-      <div><div className="clock font-bold text-xl">{applied.length}<span className="text-xs text-mut">/{target}</span></div><div className="text-[11px] text-mut">applied</div></div>
-      <div><div className="clock font-bold text-xl text-amb">{interviews.length}</div><div className="text-[11px] text-mut">in interviews</div></div>
-      <div><div className="clock font-bold text-xl text-[#F85149]">{rejWk.length}</div><div className="text-[11px] text-mut">rejections</div></div>
-    </div>
-    <Btn className="w-full" onClick={go} disabled={ai.busy}>Generate full review</Btn>
-    {ai.busy&&<Busy/>}<Err msg={ai.err}/>
-    <Out text={out}/>
-  </Card>);
+  return /*#__PURE__*/React.createElement(Card, {
+    title: "Weekly review",
+    sub: `Week of ${fmt(wk)} → ${fmt(new Date())}`,
+    right: /*#__PURE__*/React.createElement("span", {
+      className: "badge font-mono",
+      style: {
+        background: vc + '22',
+        color: vc
+      }
+    }, verdictLocal)
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "grid grid-cols-3 gap-2 text-center my-2"
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    className: "clock font-bold text-xl"
+  }, applied.length, /*#__PURE__*/React.createElement("span", {
+    className: "text-xs text-mut"
+  }, "/", target)), /*#__PURE__*/React.createElement("div", {
+    className: "text-[11px] text-mut"
+  }, "applied")), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    className: "clock font-bold text-xl text-amb"
+  }, interviews.length), /*#__PURE__*/React.createElement("div", {
+    className: "text-[11px] text-mut"
+  }, "in interviews")), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    className: "clock font-bold text-xl text-[#F85149]"
+  }, rejWk.length), /*#__PURE__*/React.createElement("div", {
+    className: "text-[11px] text-mut"
+  }, "rejections"))), /*#__PURE__*/React.createElement(Btn, {
+    className: "w-full",
+    onClick: go,
+    disabled: ai.busy
+  }, "Generate full review"), ai.busy && /*#__PURE__*/React.createElement(Busy, null), /*#__PURE__*/React.createElement(Err, {
+    msg: ai.err
+  }), /*#__PURE__*/React.createElement(Out, {
+    text: out
+  }));
 }
 
 /* ================= SETTINGS ================= */
-function Settings({db,up}){
-  const [key,setKey]=useState(db.apiKey);
-  return (<div className="space-y-3">
-    <Card title="Settings">
-      <Lbl>Gemini API key</Lbl>
-      <input type="password" className="inp" value={key} onChange={e=>setKey(e.target.value)} placeholder="AIza…"/>
-      <p className="text-xs text-mut mt-1.5">Stored only in your browser's localStorage. Free key: aistudio.google.com → Get API key (starts with AIza). Free tier: ~1500 requests/day.</p>
-      <Btn className="w-full mt-3" onClick={()=>{up(d=>{d.apiKey=key.trim();});toast('API key saved');}}>Save key</Btn>
-    </Card>
-    <Card title="Data">
-      <div className="flex gap-2">
-        <Btn variant="a" className="flex-1" onClick={()=>downloadText('jobhunt-backup-'+dkey()+'.json',JSON.stringify(loadDB(),null,2))}>Export backup</Btn>
-        <Btn variant="d" className="flex-1" onClick={()=>{if(confirm('Wipe ALL data? This cannot be undone.')){localStorage.removeItem(KEY);location.reload();}}}>Wipe all data</Btn>
-      </div>
-    </Card>
-    <p className="text-center text-[11px] text-mut">Shubham's Job Hunt HQ · all data lives in this browser · built for the Oct 31 2026 mission</p>
-  </div>);
+function Settings({
+  db,
+  up
+}) {
+  const [key, setKey] = useState(db.apiKey);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "space-y-3"
+  }, /*#__PURE__*/React.createElement(Card, {
+    title: "Settings"
+  }, /*#__PURE__*/React.createElement(Lbl, null, "Gemini API key"), /*#__PURE__*/React.createElement("input", {
+    type: "password",
+    className: "inp",
+    value: key,
+    onChange: e => setKey(e.target.value),
+    placeholder: "AIza…"
+  }), /*#__PURE__*/React.createElement("p", {
+    className: "text-xs text-mut mt-1.5"
+  }, "Stored only in your browser's localStorage. Free key: aistudio.google.com → Get API key (starts with AIza). Free tier: ~1500 requests/day."), /*#__PURE__*/React.createElement(Btn, {
+    className: "w-full mt-3",
+    onClick: () => {
+      up(d => {
+        d.apiKey = key.trim();
+      });
+      toast('API key saved');
+    }
+  }, "Save key")), /*#__PURE__*/React.createElement(Card, {
+    title: "Data"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex gap-2"
+  }, /*#__PURE__*/React.createElement(Btn, {
+    variant: "a",
+    className: "flex-1",
+    onClick: () => downloadText('jobhunt-backup-' + dkey() + '.json', JSON.stringify(loadDB(), null, 2))
+  }, "Export backup"), /*#__PURE__*/React.createElement(Btn, {
+    variant: "d",
+    className: "flex-1",
+    onClick: () => {
+      if (confirm('Wipe ALL data? This cannot be undone.')) {
+        localStorage.removeItem(KEY);
+        location.reload();
+      }
+    }
+  }, "Wipe all data"))), /*#__PURE__*/React.createElement("p", {
+    className: "text-center text-[11px] text-mut"
+  }, "Shubham's Job Hunt HQ · all data lives in this browser · built for the Oct 31 2026 mission"));
 }
 
 /* ================= APP SHELL ================= */
-const MODULES=[
-  {id:'velocity',name:'Velocity tracker',icon:'📈',c:Velocity},
-  {id:'resume',name:'Resume tailor',icon:'📄',c:ResumeTailor},
-  {id:'cover',name:'Cover letter',icon:'✉️',c:CoverLetter},
-  {id:'followup',name:'Follow-up emails',icon:'🔁',c:FollowUp},
-  {id:'outreach',name:'Cold outreach',icon:'🤝',c:ColdOutreach},
-  {id:'ats',name:'ATS scanner',icon:'🔍',c:ATSScanner},
-  {id:'linkedin',name:'LinkedIn optimizer',icon:'💼',c:LinkedInOpt},
-  {id:'gaps',name:'Skill gap analyzer',icon:'🧩',c:SkillGap},
-  {id:'research',name:'Company research',icon:'🏢',c:Research},
-  {id:'rejections',name:'Rejection analyzer',icon:'🩻',c:RejectionAnalyzer},
-  {id:'salary',name:'Salary coach',icon:'💰',c:SalaryCoach},
-  {id:'offers',name:'Offer comparison',icon:'⚖️',c:Offers},
-  {id:'planner',name:'Daily planner',icon:'✅',c:Planner},
-  {id:'exit',name:'Genpact exit strategy',icon:'🚪',c:ExitStrategy},
-  {id:'mental',name:'Mental load tracker',icon:'🧠',c:MentalLoad},
-  {id:'weekly',name:'Weekly review',icon:'🗓️',c:WeeklyReview},
-  {id:'settings',name:'Settings',icon:'⚙️',c:Settings},
-];
-const TITLES={dashboard:"Shubham's Job Hunt HQ",tracker:'Application tracker',search:'Job search',prep:'Interview prep',more:'All tools'};
-
-function App(){
-  const [db,setDb]=useState(loadDB);
-  const [screen,setScreen]=useState(db.apiKey?'dashboard':'settings');
-  const up=(fn)=>setDb(prev=>{const n=JSON.parse(JSON.stringify(prev));fn(n);saveDB(n);return n;});
-  const go=(s)=>{setScreen(s);window.scrollTo(0,0);};
-  const mod=MODULES.find(m=>m.id===screen);
-  const dl=daysLeft();
-  const title=TITLES[screen]||(mod&&mod.name)||'';
-  return (<div className="max-w-xl mx-auto min-h-screen pb-24">
-    <header className="sticky top-0 z-20 bg-bg/95 backdrop-blur border-b border-line px-4 py-3 flex items-center justify-between">
-      <div className="flex items-center gap-2 min-w-0">
-        {(mod&&screen!=='settings'||screen==='settings'&&db.apiKey)&&<button onClick={()=>go('more')} className="text-mut text-lg leading-none">‹</button>}
-        <h1 className="font-disp font-bold text-base truncate">{title}</h1>
-      </div>
-      <span className="clock text-xs font-bold px-2.5 py-1 rounded-full border" style={{color:dl<60?'#F85149':'#00FF94',borderColor:dl<60?'#F85149':'#00FF94'}}>{dl}d</span>
-    </header>
-    <main className="p-4">
-      {!db.apiKey&&screen==='settings'&&<div className="mb-4 bg-card border border-acc rounded-2xl p-4">
-        <h2 className="font-disp font-bold text-acc">Welcome, Shubham 👋</h2>
-        <p className="text-sm text-mut mt-1">One-time setup: paste your free Gemini API key below to unlock all 20 AI tools. Get it at aistudio.google.com (2 min, free). Then hit Dashboard and start the mission.</p>
-      </div>}
-      <div className="screen">
-        {screen==='dashboard'&&<Dashboard db={db} go={go}/>}
-        {screen==='tracker'&&<Tracker db={db} up={up}/>}
-        {screen==='search'&&<JobSearch db={db} up={up}/>}
-        {screen==='prep'&&<InterviewPrep db={db} up={up}/>}
-        {screen==='more'&&<div className="grid grid-cols-2 gap-3">
-          {MODULES.map(m=>(
-            <button key={m.id} onClick={()=>go(m.id)} className="bg-card border border-line rounded-2xl p-4 text-left hover:border-acc transition-colors">
-              <div className="text-2xl">{m.icon}</div>
-              <div className="font-semibold text-[13px] mt-1.5">{m.name}</div>
-            </button>))}
-        </div>}
-        {mod&&React.createElement(mod.c,{db,up,go})}
-      </div>
-    </main>
-    <nav className="fixed bottom-0 left-0 right-0 z-20 bg-card border-t border-line flex max-w-xl mx-auto">
-      {[['dashboard','⌂','Home'],['tracker','▤','Tracker'],['search','⌕','Search'],['prep','🎤','Prep'],['more','⋯','More']].map(([id,ic,l])=>(
-        <button key={id} className={`navbtn ${screen===id||(id==='more'&&mod&&screen!=='prep')?'on':''}`} onClick={()=>go(id)}>
-          <span className="text-lg leading-none">{ic}</span>{l}
-        </button>))}
-    </nav>
-  </div>);
+const MODULES = [{
+  id: 'velocity',
+  name: 'Velocity tracker',
+  icon: '📈',
+  c: Velocity
+}, {
+  id: 'resume',
+  name: 'Resume tailor',
+  icon: '📄',
+  c: ResumeTailor
+}, {
+  id: 'cover',
+  name: 'Cover letter',
+  icon: '✉️',
+  c: CoverLetter
+}, {
+  id: 'followup',
+  name: 'Follow-up emails',
+  icon: '🔁',
+  c: FollowUp
+}, {
+  id: 'outreach',
+  name: 'Cold outreach',
+  icon: '🤝',
+  c: ColdOutreach
+}, {
+  id: 'ats',
+  name: 'ATS scanner',
+  icon: '🔍',
+  c: ATSScanner
+}, {
+  id: 'linkedin',
+  name: 'LinkedIn optimizer',
+  icon: '💼',
+  c: LinkedInOpt
+}, {
+  id: 'gaps',
+  name: 'Skill gap analyzer',
+  icon: '🧩',
+  c: SkillGap
+}, {
+  id: 'research',
+  name: 'Company research',
+  icon: '🏢',
+  c: Research
+}, {
+  id: 'rejections',
+  name: 'Rejection analyzer',
+  icon: '🩻',
+  c: RejectionAnalyzer
+}, {
+  id: 'salary',
+  name: 'Salary coach',
+  icon: '💰',
+  c: SalaryCoach
+}, {
+  id: 'offers',
+  name: 'Offer comparison',
+  icon: '⚖️',
+  c: Offers
+}, {
+  id: 'planner',
+  name: 'Daily planner',
+  icon: '✅',
+  c: Planner
+}, {
+  id: 'exit',
+  name: 'Genpact exit strategy',
+  icon: '🚪',
+  c: ExitStrategy
+}, {
+  id: 'mental',
+  name: 'Mental load tracker',
+  icon: '🧠',
+  c: MentalLoad
+}, {
+  id: 'weekly',
+  name: 'Weekly review',
+  icon: '🗓️',
+  c: WeeklyReview
+}, {
+  id: 'settings',
+  name: 'Settings',
+  icon: '⚙️',
+  c: Settings
+}];
+const TITLES = {
+  dashboard: "Shubham's Job Hunt HQ",
+  tracker: 'Application tracker',
+  search: 'Job search',
+  prep: 'Interview prep',
+  more: 'All tools'
+};
+function App() {
+  const [db, setDb] = useState(loadDB);
+  const [screen, setScreen] = useState(db.apiKey ? 'dashboard' : 'settings');
+  const up = fn => setDb(prev => {
+    const n = JSON.parse(JSON.stringify(prev));
+    fn(n);
+    saveDB(n);
+    return n;
+  });
+  const go = s => {
+    setScreen(s);
+    window.scrollTo(0, 0);
+  };
+  const mod = MODULES.find(m => m.id === screen);
+  const dl = daysLeft();
+  const title = TITLES[screen] || mod && mod.name || '';
+  return /*#__PURE__*/React.createElement("div", {
+    className: "max-w-xl mx-auto min-h-screen pb-24"
+  }, /*#__PURE__*/React.createElement("header", {
+    className: "sticky top-0 z-20 bg-bg/95 backdrop-blur border-b border-line px-4 py-3 flex items-center justify-between"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-2 min-w-0"
+  }, (mod && screen !== 'settings' || screen === 'settings' && db.apiKey) && /*#__PURE__*/React.createElement("button", {
+    onClick: () => go('more'),
+    className: "text-mut text-lg leading-none"
+  }, "‹"), /*#__PURE__*/React.createElement("h1", {
+    className: "font-disp font-bold text-base truncate"
+  }, title)), /*#__PURE__*/React.createElement("span", {
+    className: "clock text-xs font-bold px-2.5 py-1 rounded-full border",
+    style: {
+      color: dl < 60 ? '#F85149' : '#00FF94',
+      borderColor: dl < 60 ? '#F85149' : '#00FF94'
+    }
+  }, dl, "d")), /*#__PURE__*/React.createElement("main", {
+    className: "p-4"
+  }, !db.apiKey && screen === 'settings' && /*#__PURE__*/React.createElement("div", {
+    className: "mb-4 bg-card border border-acc rounded-2xl p-4"
+  }, /*#__PURE__*/React.createElement("h2", {
+    className: "font-disp font-bold text-acc"
+  }, "Welcome, Shubham 👋"), /*#__PURE__*/React.createElement("p", {
+    className: "text-sm text-mut mt-1"
+  }, "One-time setup: paste your free Gemini API key below to unlock all 20 AI tools. Get it at aistudio.google.com (2 min, free). Then hit Dashboard and start the mission.")), /*#__PURE__*/React.createElement("div", {
+    className: "screen"
+  }, screen === 'dashboard' && /*#__PURE__*/React.createElement(Dashboard, {
+    db: db,
+    go: go
+  }), screen === 'tracker' && /*#__PURE__*/React.createElement(Tracker, {
+    db: db,
+    up: up
+  }), screen === 'search' && /*#__PURE__*/React.createElement(JobSearch, {
+    db: db,
+    up: up
+  }), screen === 'prep' && /*#__PURE__*/React.createElement(InterviewPrep, {
+    db: db,
+    up: up
+  }), screen === 'more' && /*#__PURE__*/React.createElement("div", {
+    className: "grid grid-cols-2 gap-3"
+  }, MODULES.map(m => /*#__PURE__*/React.createElement("button", {
+    key: m.id,
+    onClick: () => go(m.id),
+    className: "bg-card border border-line rounded-2xl p-4 text-left hover:border-acc transition-colors"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "text-2xl"
+  }, m.icon), /*#__PURE__*/React.createElement("div", {
+    className: "font-semibold text-[13px] mt-1.5"
+  }, m.name)))), mod && React.createElement(mod.c, {
+    db,
+    up,
+    go
+  }))), /*#__PURE__*/React.createElement("nav", {
+    className: "fixed bottom-0 left-0 right-0 z-20 bg-card border-t border-line flex max-w-xl mx-auto"
+  }, [['dashboard', '⌂', 'Home'], ['tracker', '▤', 'Tracker'], ['search', '⌕', 'Search'], ['prep', '🎤', 'Prep'], ['more', '⋯', 'More']].map(([id, ic, l]) => /*#__PURE__*/React.createElement("button", {
+    key: id,
+    className: `navbtn ${screen === id || id === 'more' && mod && screen !== 'prep' ? 'on' : ''}`,
+    onClick: () => go(id)
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "text-lg leading-none"
+  }, ic), l))));
 }
-ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+ReactDOM.createRoot(document.getElementById('root')).render(/*#__PURE__*/React.createElement(App, null));
 </script>
 </body>
 </html>
