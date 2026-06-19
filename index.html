@@ -10,7 +10,7 @@
 <script>tailwind.config={theme:{extend:{colors:{bg:'#0D1117',card:'#161B22',line:'#21262D',acc:'#00FF94',amb:'#F4A623',mut:'#8B949E'},fontFamily:{disp:['Space Grotesk','sans-serif'],body:['Inter','sans-serif'],mono:['JetBrains Mono','monospace']}}}}</script>
 <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone@7.23.10/babel.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 <style>
   html,body{background:#0D1117;color:#E6EDF3;font-family:Inter,sans-serif;-webkit-tap-highlight-color:transparent}
@@ -136,9 +136,9 @@ async function callAI({system,user,tools,max=2500,apiKey}){
   if(tools)body.tools=[{google_search:{}}];
   const url='https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='+encodeURIComponent(apiKey);
   const r=await fetch(url,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});
-  if(!r.ok){let msg='';try{msg=(await r.json()).error?.message||'';}catch(e){}throw new Error('API error '+r.status+(msg?': '+msg:''));}
+  if(!r.ok){let msg='';try{msg=((await r.json()).error||{}).message||'';}catch(e){}throw new Error('API error '+r.status+(msg?': '+msg:''));}
   const d=await r.json();
-  const parts=d.candidates?.[0]?.content?.parts||[];
+  const parts=((((d.candidates||[])[0])||{}).content||{}).parts||[];
   return parts.map(p=>p.text||'').join('\n').trim();
 }
 function jparse(t){
@@ -1103,7 +1103,7 @@ function App(){
   const go=(s)=>{setScreen(s);window.scrollTo(0,0);};
   const mod=MODULES.find(m=>m.id===screen);
   const dl=daysLeft();
-  const title=TITLES[screen]||mod?.name||'';
+  const title=TITLES[screen]||(mod&&mod.name)||'';
   return (<div className="max-w-xl mx-auto min-h-screen pb-24">
     <header className="sticky top-0 z-20 bg-bg/95 backdrop-blur border-b border-line px-4 py-3 flex items-center justify-between">
       <div className="flex items-center gap-2 min-w-0">
