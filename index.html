@@ -38,6 +38,7 @@
   table.cmp th,table.cmp td{border:1px solid #21262D;padding:8px;text-align:left}
   table.cmp th{color:#8B949E;font-weight:600;background:#0D1117}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
@@ -204,19 +205,19 @@ async function callAI({
   return (((d.choices || [])[0] || {}).message || {}).content || '';
 }
 function jparse(t) {
-  const c = t.replace(/```json[\s\S]*?```|```/g, s => s.startsWith('```json') ? s.slice(7, -3) : '').trim();
-  const a = c.indexOf('['),
-    o = c.indexOf('{');
-  let s, e;
-  if (a > -1 && (o === -1 || a < o)) {
-    s = a;
-    e = c.lastIndexOf(']');
-  } else {
-    s = o;
-    e = c.lastIndexOf('}');
+  if(!t||!t.trim())throw new Error('Empty AI response. Try again.');
+  let c=t.replace(/```json/gi,'').replace(/```/g,'').trim();
+  const a=c.indexOf('['), o=c.indexOf('{');
+  let start, end;
+  if(a>-1&&(o===-1||a<o)){start=a;end=c.lastIndexOf(']');}
+  else{start=o;end=c.lastIndexOf('}');}
+  if(start===-1||end===-1)throw new Error('AI did not return JSON. Try again.');
+  try{return JSON.parse(c.slice(start,end+1));}
+  catch(e){
+    const fixed=c.slice(start,end+1).replace(/,\s*([}\]])/g,'$1');
+    try{return JSON.parse(fixed);}
+    catch(e2){throw new Error('Could not parse AI response. Try again.');}
   }
-  if (s === -1 || e === -1) throw new Error('No JSON found');
-  return JSON.parse(c.slice(s, e + 1));
 }
 function useAI(db) {
   const [busy, setBusy] = useState(false);
@@ -250,23 +251,29 @@ function useAI(db) {
 
 /* ═══════════════ PDF READER ═══════════════ */
 async function readPdfText(file) {
-  return new Promise((res, rej) => {
+  return new Promise((res) => {
     const reader = new FileReader();
     reader.onload = async e => {
       try {
-        const arr = new Uint8Array(e.target.result);
-        // Simple PDF text extraction — look for text between BT and ET markers
-        let text = '';
-        const bytes = arr;
-        const str = new TextDecoder('latin1').decode(bytes);
-        // Extract readable ASCII strings from PDF
-        const matches = str.match(/\(([^\)]{2,})\)/g) || [];
-        const chunks = matches.map(m => m.slice(1, -1).replace(/\\n/g, ' ').replace(/\\/g, '').trim()).filter(s => s.length > 2 && /[a-zA-Z]/.test(s));
-        text = chunks.join(' ');
-        if (text.length < 100) text = '[PDF text extraction limited — using filename: ' + file.name + '. Please paste resume text manually in Settings.]';
-        res(text);
+        const typedArray = new Uint8Array(e.target.result);
+        // Use PDF.js for proper text extraction
+        const pdfjsLib = window['pdfjs-dist/build/pdf'];
+        if (!pdfjsLib) { res('PDF_EXTRACTION_FAILED'); return; }
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        const pdf = await pdfjsLib.getDocument({data: typedArray}).promise;
+        let fullText = '';
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const content = await page.getTextContent();
+          const pageText = content.items.map(item => item.str).join(' ');
+          fullText += pageText + '\n';
+        }
+        fullText = fullText.replace(/\s+/g, ' ').trim();
+        const wordCount = (fullText.match(/\b[a-zA-Z]{3,}\b/g) || []).length;
+        if (wordCount < 20) { res('PDF_EXTRACTION_FAILED'); return; }
+        res(fullText);
       } catch (err) {
-        rej(err);
+        res('PDF_EXTRACTION_FAILED');
       }
     };
     reader.readAsArrayBuffer(file);
@@ -409,12 +416,14 @@ function ResumeUpload({
     setLoading(true);
     try {
       const t = await readPdfText(f);
-      setText(t);
-      up(d => {
-        d.resumeText = t;
-        d.resumePdfName = f.name;
-      });
-      toast('Resume loaded: ' + f.name);
+      if (t === 'PDF_EXTRACTION_FAILED') {
+        up(d => { d.resumePdfName = f.name; });
+        toast('PDF loaded but text extraction failed — please paste resume text below');
+      } else {
+        setText(t);
+        up(d => { d.resumeText = t; d.resumePdfName = f.name; });
+        toast('Resume loaded: ' + f.name + ' ✓');
+      }
     } catch (err) {
       toast('PDF read failed — paste text below');
     } finally {
@@ -733,7 +742,7 @@ function JobSearch({
   const [results, setResults] = useState([]);
   const [jd, setJd] = useState('');
   const [fit, setFit] = useState(null);
-  const resume = db.resumeText || '[No resume uploaded — go to More → My Resume]';
+  const resume = db.resumeText && db.resumeText.length > 100 && !db.resumeText.startsWith('[') ? db.resumeText : '[RESUME NOT FOUND: Go to More \u2192 My Resume and PASTE your resume text, then click Save resume]';
   const search = async () => {
     setResults([]);
     const text = await ai.run({
@@ -921,7 +930,7 @@ function ResumeCover({
     tone: 'Professional'
   });
   const [letter, setLetter] = useState('');
-  const resume = db.resumeText || '[Upload resume in More → My Resume]';
+  const resume = db.resumeText && db.resumeText.length > 100 && !db.resumeText.startsWith('[') ? db.resumeText : '[RESUME NOT FOUND: Go to More \u2192 My Resume and PASTE your resume text, then click Save resume]';
   const loadSavedJob = id => {
     const j = (db.savedJobs || []).find(x => String(x.id) === String(id));
     if (j) {
@@ -936,7 +945,7 @@ function ResumeCover({
   const tailor = async () => {
     setRes(null);
     const text = await ai.run({
-      system: 'ATS resume expert. Compare resume vs JD. Return ONLY JSON: {"ats":0-100,"keywords":[{"kw":"","present":true/false}],"bullets":["one-liner bullet point to ADD to resume (max 12 words each, achievement-led, no duties)"],"summary":"2-line tailored summary for this JD"}. Bullets must be SHORT (under 12 words), copy-pasteable, metric-driven.',
+      system: 'You are an ATS resume expert. Compare the resume vs JD and return ONLY valid JSON with NO extra text, no markdown, no explanation. Format: {"ats":75,"keywords":[{"kw":"SLA Management","present":true},{"kw":"401k","present":true}],"bullets":["Led 12-member team achieving 100% SLA compliance","Reduced TAT by 50% via RPA implementation"],"summary":"Results-driven ops leader with 5+ yrs BFSI experience. Expert in 401k administration and team leadership."}',
       user: `RESUME:\n${resume}\n\nJD:\n${jd}`,
       max: 2500
     });
@@ -1115,7 +1124,7 @@ function InterviewPrep({
   const [ans, setAns] = useState('');
   const [fb, setFb] = useState('');
   const [brief, setBrief] = useState('');
-  const resume = db.resumeText || '';
+  const rawR = db.resumeText || ''; const resume = (!rawR || rawR.startsWith('[') || rawR.includes('FAILED')) ? '' : rawR;
   const loadSaved = id => {
     const j = (db.savedJobs || []).find(x => String(x.id) === String(id));
     if (j) {
@@ -1425,7 +1434,7 @@ function ATSScanner({
   const [jd, setJd] = useState('');
   const [savedJobId, setSavedJobId] = useState('');
   const [res, setRes] = useState(null);
-  const resume = db.resumeText || '[Upload resume in More → My Resume]';
+  const resume = db.resumeText && db.resumeText.length > 100 && !db.resumeText.startsWith('[') ? db.resumeText : '[RESUME NOT FOUND: Go to More \u2192 My Resume and PASTE your resume text, then click Save resume]';
   const loadSaved = id => {
     const j = (db.savedJobs || []).find(x => String(x.id) === String(id));
     if (j) setJd(j.description || j.title + ' at ' + j.company);
@@ -1502,7 +1511,7 @@ function LinkedInOpt({
   const [about, setAbout] = useState('');
   const [targetRole, setTargetRole] = useState('Assistant Manager – Operations');
   const [res, setRes] = useState(null);
-  const resume = db.resumeText || '';
+  const rawR = db.resumeText || ''; const resume = (!rawR || rawR.startsWith('[') || rawR.includes('FAILED')) ? '' : rawR;
   const go = async () => {
     setRes(null);
     const text = await ai.run({
@@ -1588,7 +1597,7 @@ function SkillGap({
   const go = async () => {
     const text = await ai.run({
       system: 'Skill gap analyst. Return ONLY JSON array 5-8 items: [{"skill":"","priority":"High/Medium/Low","why":"one line","resource":"one specific free resource"}]. Only REAL gaps vs candidate profile.',
-      user: `Resume:\n${db.resumeText || ''}\nTarget role: ${role}`
+      user: `Resume:\n${(db.resumeText && db.resumeText.length > 100 && !db.resumeText.startsWith('[')) ? db.resumeText : 'Candidate: Shubham, 5+ yrs BFSI ops, US 401k, team lead 12 FTEs, Genpact Management Trainee'}\nTarget role: ${role}`
     });
     if (!text) return;
     try {
