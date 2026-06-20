@@ -192,7 +192,7 @@ async function callAI({
       'authorization': 'Bearer ' + apiKey
     },
     body: JSON.stringify({
-      model: 'llama-3.3-70b-versatile',
+      model: 'llama-3.1-8b-instant',
       messages,
       max_tokens: max,
       temperature: 0.7
@@ -1016,17 +1016,27 @@ function ResumeCover({
   };
   const tailor = async () => {
     setRes(null);
-    const text = await ai.run({
-      system: 'You are an ATS resume expert for Indian BFSI hiring. Return ONLY a raw JSON object — no markdown, no backticks, no explanation, nothing before or after the JSON. Use this exact structure:\n{"ats":82,"keywords":[{"kw":"401k Administration","present":true},{"kw":"SLA Management","present":true}],"summary":"Results-driven BFSI Operations Leader with 5+ years in US 401(k) retirement plan administration. Currently managing 12+ member team at Genpact with 100% SLA compliance. Expert in process automation, client governance and team leadership.","genpact_bullets":["Lead end-to-end US 401(k) operations for 12+ associates maintaining 100% SLA compliance","Drive RPA automation reducing TAT by 50% across retirement plan workflows","Serve as primary client governance escalation point presenting risk dashboards to senior stakeholders","Conduct RCA and CAPA implementation reducing repeat errors by measurable margin","Design daily MIS reports enabling data-driven decisions for client and internal management"],"exl_bullets":["Managed complex 401(k) Money Out transactions including withdrawals loans hardships and RMDs with 100% federal compliance","Served as quality anchor conducting audits maintaining high accuracy benchmarks","Mentored new hires reducing ramp-up time through structured SME coaching"],"sunlife_bullets":["Executed high-volume US and Canada retirement plan transactions with 100% protocol adherence","Reduced client escalations through root-cause analysis consistently surpassing SLA standards"],"achievements":["Extra Miler Award EXL: Recognised for exceptional ownership and going beyond role scope to drive operational outcomes","Achievers Award SunLife: Ranked number 1 performer for 3 consecutive months exceeding quality benchmarks","50% TAT Reduction: Led RPA bot implementation reducing manual effort and rework by approximately 50%","Zero Missed SLA: Maintained 100% SLA compliance at Genpact with no missed deliverables"]}\nNow tailor this specifically to the JD provided. Keep same JSON structure. 100% correct spelling.',
-      user: `RESUME:\n${resume}\n\nJD:\n${jd}`,
-      max: 2500
+    // Step 1: ATS score + keywords + summary (small, reliable)
+    const text1 = await ai.run({
+      system: 'ATS resume analyzer. Return ONLY raw JSON, no markdown: {"ats":0-100,"keywords":[{"kw":"skill","present":true}],"summary":"2-line tailored summary"}. Max 8 keywords from JD. Summary under 50 words.',
+      user: `JD: ${jd.slice(0,800)}\nCandidate skills: US 401k, SLA Management, Team Leadership 12 FTEs, RPA, MIS, Genpact Management Trainee, EXL SME, SunLife Process Associate`,
+      max: 800
     });
-    if (!text) return;
-    try {
-      setRes(jparse(text));
-    } catch (e) {
-      ai.setErr('Parse failed.');
-    }
+    if (!text1) return;
+    let step1;
+    try { step1 = jparse(text1); } catch(e) { ai.setErr('Step 1 parse failed. Try again.'); return; }
+
+    // Step 2: Updated bullets for resume (separate call)
+    const text2 = await ai.run({
+      system: 'Resume bullet writer for Indian BFSI professional. Return ONLY raw JSON, no markdown: {"genpact_bullets":["bullet1","bullet2"],"exl_bullets":["bullet1"],"sunlife_bullets":["bullet1"],"achievements":["ach1"]}. Rules: max 5 Genpact bullets, 3 EXL, 2 SunLife, 4 achievements. Each bullet under 20 words. 100% correct spelling. Tailor to JD keywords.',
+      user: `JD keywords to include: ${(step1.keywords||[]).filter(k=>!k.present).map(k=>k.kw).join(', ')||'SLA, Operations, Team Leadership'}\nCurrent role: Management Trainee Genpact, US 401k ops, 12 FTEs, 100% SLA\nPrevious: EXL SME 401k Money Out, SunLife Process Associate`,
+      max: 1200
+    });
+    if (!text2) return;
+    let step2;
+    try { step2 = jparse(text2); } catch(e) { ai.setErr('Step 2 parse failed. Try again.'); return; }
+
+    setRes({...step1, ...step2});
   };
   const genLetter = async () => {
     setLetter('');
