@@ -42,6 +42,7 @@
 <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 <div id="root"></div>
@@ -256,23 +257,45 @@ async function readPdfText(file) {
     reader.onload = async e => {
       try {
         const typedArray = new Uint8Array(e.target.result);
-        // Use PDF.js for proper text extraction
-        const pdfjsLib = window['pdfjs-dist/build/pdf'];
-        if (!pdfjsLib) { res('PDF_EXTRACTION_FAILED'); return; }
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-        const pdf = await pdfjsLib.getDocument({data: typedArray}).promise;
-        let fullText = '';
-        for (let i = 1; i <= pdf.numPages; i++) {
-          const page = await pdf.getPage(i);
-          const content = await page.getTextContent();
-          const pageText = content.items.map(item => item.str).join(' ');
-          fullText += pageText + '\n';
+        // PDF.js — try multiple global keys for different CDN versions
+        const pdfjsLib = window['pdfjs-dist/build/pdf'] || window.pdfjsLib || window.PDFJS;
+        if (!pdfjsLib) {
+          // fallback: try loading worker inline
+          res('PDF_EXTRACTION_FAILED'); return;
         }
-        fullText = fullText.replace(/\s+/g, ' ').trim();
+        // Set worker — use same version as loaded CDN
+        if (!pdfjsLib.GlobalWorkerOptions.workerSrc) {
+          pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        }
+        const loadingTask = pdfjsLib.getDocument({data: typedArray, useWorkerFetch: false});
+        const pdf = await loadingTask.promise;
+        let lines = [];
+        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+          const page = await pdf.getPage(pageNum);
+          const content = await page.getTextContent({normalizeWhitespace: true, disableCombineTextItems: false});
+          // Group items by Y position to reconstruct lines
+          const itemsByY = {};
+          for (const item of content.items) {
+            if (!item.str || !item.str.trim()) continue;
+            const y = Math.round(item.transform[5]);
+            if (!itemsByY[y]) itemsByY[y] = [];
+            itemsByY[y].push({x: item.transform[4], text: item.str});
+          }
+          // Sort by Y descending (top to bottom), X ascending (left to right)
+          const sortedYs = Object.keys(itemsByY).map(Number).sort((a,b) => b-a);
+          for (const y of sortedYs) {
+            const lineItems = itemsByY[y].sort((a,b) => a.x - b.x);
+            const lineText = lineItems.map(i => i.text).join(' ').trim();
+            if (lineText) lines.push(lineText);
+          }
+          lines.push(''); // page separator
+        }
+        let fullText = lines.join('\n').replace(/\n{3,}/g, '\n\n').trim();
         const wordCount = (fullText.match(/\b[a-zA-Z]{3,}\b/g) || []).length;
         if (wordCount < 20) { res('PDF_EXTRACTION_FAILED'); return; }
         res(fullText);
       } catch (err) {
+        console.error('PDF.js error:', err);
         res('PDF_EXTRACTION_FAILED');
       }
     };
@@ -410,19 +433,23 @@ function ResumeUpload({
 }) {
   const [text, setText] = useState(db.resumeText || '');
   const [loading, setLoading] = useState(false);
+  const [extractionFailed, setExtractionFailed] = useState(false);
   const onFile = async e => {
     const f = e.target.files[0];
     if (!f) return;
     setLoading(true);
     try {
+      toast('Reading PDF...');
       const t = await readPdfText(f);
       if (t === 'PDF_EXTRACTION_FAILED') {
         up(d => { d.resumePdfName = f.name; });
-        toast('PDF loaded but text extraction failed — please paste resume text below');
+        toast('⚠ PDF extraction failed — paste resume text below');
+        setExtractionFailed(true);
       } else {
         setText(t);
         up(d => { d.resumeText = t; d.resumePdfName = f.name; });
-        toast('Resume loaded: ' + f.name + ' ✓');
+        setExtractionFailed(false);
+        toast('✓ Resume extracted — ' + t.split(' ').filter(Boolean).length + ' words read');
       }
     } catch (err) {
       toast('PDF read failed — paste text below');
@@ -431,10 +458,10 @@ function ResumeUpload({
     }
   };
   const save = () => {
-    up(d => {
-      d.resumeText = text;
-    });
-    toast('Resume saved');
+    if(!text.trim()){toast('Paste your resume text first');return;}
+    up(d => {d.resumeText = text;});
+    const wc = text.split(' ').filter(Boolean).length;
+    toast('\u2713 Resume saved — ' + wc + ' words. All modules now use this.');
   };
   return /*#__PURE__*/React.createElement(Card, {
     title: "My Resume",
@@ -452,7 +479,10 @@ function ResumeUpload({
     className: "btn btn-a cursor-pointer"
   }, loading ? 'Reading…' : '📎 Upload resume PDF'), db.resumePdfName && /*#__PURE__*/React.createElement("div", {
     className: "text-xs text-acc mt-2"
-  }, "Loaded: ", db.resumePdfName)), /*#__PURE__*/React.createElement(Lbl, null, "Or paste resume text"), /*#__PURE__*/React.createElement("textarea", {
+  }, "Loaded: ", db.resumePdfName)), extractionFailed && /*#__PURE__*/React.createElement("div", {className: "err mb-2"},
+      "⚠ PDF.js could not read your PDF. This happens with image-based or scanned PDFs. Please paste your resume text below."
+    ),
+    /*#__PURE__*/React.createElement(Lbl, null, "Or paste resume text (recommended for best results)"), /*#__PURE__*/React.createElement("textarea", {
     className: "inp",
     rows: "8",
     value: text,
@@ -770,59 +800,86 @@ function JobSearch({
       ai.setErr('Parse failed.');
     }
   };
-  const saveJob = j => {
+  const [extracting, setExtracting] = useState(null);
+
+  const saveJob = (j, jdText) => {
     up(d => {
       d.savedJobs = [...(d.savedJobs || []), {
         ...j,
         id: Date.now(),
-        savedAt: dkey()
+        savedAt: dkey(),
+        jdPasted: jdText || ''
       }];
     });
-    toast('Job saved ✓');
+    toast('\u2713 Job saved — all modules auto-filled');
   };
-  const JobCard = ({
-    j,
-    saved
-  }) => /*#__PURE__*/React.createElement("div", {
-    className: "bg-card border border-line rounded-2xl p-3"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "flex justify-between gap-2"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "min-w-0"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "font-semibold text-sm"
-  }, j.title), /*#__PURE__*/React.createElement("div", {
-    className: "text-xs text-mut"
-  }, j.company, " · ", j.location), /*#__PURE__*/React.createElement("div", {
-    className: "text-xs mt-0.5"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "text-amb"
-  }, j.salary || 'Salary not disclosed'), " · ", /*#__PURE__*/React.createElement("span", {
-    className: "text-mut"
-  }, j.source)), j.posted && /*#__PURE__*/React.createElement("div", {
-    className: "text-xs text-acc mt-0.5"
-  }, "Posted: ", j.posted)), j.match != null && /*#__PURE__*/React.createElement("div", {
-    className: "font-mono font-bold text-xl shrink-0",
-    style: {
-      color: j.match >= 70 ? '#00FF94' : j.match >= 50 ? '#F4A623' : '#F85149'
+
+  const extractAndSave = async (j) => {
+    if (!j.url) { saveJob(j, ''); return; }
+    setExtracting(j.id);
+    toast('Extracting JD automatically...');
+    try {
+      const r = await fetch('https://jd-extractor.shubham041399.workers.dev/?url=' + encodeURIComponent(j.url));
+      const data = await r.json();
+      if (data.error) {
+        toast('\u26a0 Auto-extract failed: ' + data.error.slice(0,60) + '. Job saved without JD.');
+        saveJob(j, '');
+      } else {
+        const extracted = {
+          ...j,
+          title: data.title || j.title,
+          company: data.company || j.company,
+          location: data.location || j.location,
+          salary: data.salary || j.salary,
+          jdPasted: data.jd || ''
+        };
+        saveJob(extracted, data.jd || '');
+        if (data.jd) toast('\u2713 JD auto-extracted! All modules ready.');
+        else toast('Job saved. JD extraction partial — some modules may need manual JD.');
+      }
+    } catch(e) {
+      toast('Network error. Job saved without JD.');
+      saveJob(j, '');
     }
-  }, j.match)), /*#__PURE__*/React.createElement("div", {
-    className: "flex gap-2 mt-2 flex-wrap"
-  }, j.url && /*#__PURE__*/React.createElement("a", {
-    href: j.url,
-    target: "_blank",
-    rel: "noreferrer",
-    className: "btn btn-g btn-sm"
-  }, "Open ↗"), !saved && /*#__PURE__*/React.createElement(Btn, {
-    small: true,
-    onClick: () => saveJob(j)
-  }, "Save job"), saved && /*#__PURE__*/React.createElement(Btn, {
-    small: true,
-    variant: "d",
-    onClick: () => up(d => {
-      d.savedJobs = d.savedJobs.filter(x => x.id !== j.id);
-    })
-  }, "Remove")));
+    setExtracting(null);
+  };
+
+  const JobCard = ({j, saved}) => /*#__PURE__*/React.createElement("div", {
+    className: "bg-card border border-line rounded-2xl p-3"
+  },
+    /*#__PURE__*/React.createElement("div", {className: "flex justify-between gap-2"},
+      /*#__PURE__*/React.createElement("div", {className: "min-w-0"},
+        /*#__PURE__*/React.createElement("div", {className: "font-semibold text-sm"}, j.title),
+        /*#__PURE__*/React.createElement("div", {className: "text-xs text-mut"}, j.company, " \u00b7 ", j.location),
+        /*#__PURE__*/React.createElement("div", {className: "text-xs mt-0.5"},
+          /*#__PURE__*/React.createElement("span", {className: "text-amb"}, j.salary || 'Salary not disclosed'),
+          " \u00b7 ",
+          /*#__PURE__*/React.createElement("span", {className: "text-mut"}, j.source)
+        ),
+        j.posted && /*#__PURE__*/React.createElement("div", {className: "text-xs text-acc mt-0.5"}, "Posted: ", j.posted),
+        saved && j.jdPasted && /*#__PURE__*/React.createElement("div", {className: "text-xs text-acc mt-0.5"}, "\u2713 JD extracted \u2014 all modules auto-filled"),
+        saved && !j.jdPasted && /*#__PURE__*/React.createElement("div", {className: "text-xs text-amb mt-0.5"}, "\u26a0 No JD \u2014 open job URL and paste JD manually if needed")
+      ),
+      j.match != null && /*#__PURE__*/React.createElement("div", {
+        className: "font-mono font-bold text-xl shrink-0",
+        style: {color: j.match >= 70 ? '#00FF94' : j.match >= 50 ? '#F4A623' : '#F85149'}
+      }, j.match)
+    ),
+    /*#__PURE__*/React.createElement("div", {className: "flex gap-2 mt-2 flex-wrap"},
+      j.url && /*#__PURE__*/React.createElement("a", {
+        href: j.url, target: "_blank", rel: "noreferrer", className: "btn btn-g btn-sm"
+      }, "Open \u2197"),
+      !saved && /*#__PURE__*/React.createElement(Btn, {
+        small: true,
+        disabled: extracting === j.id,
+        onClick: () => extractAndSave(j)
+      }, extracting === j.id ? "Extracting JD..." : "\u2728 Save + Auto-extract JD"),
+      saved && /*#__PURE__*/React.createElement(Btn, {
+        small: true, variant: "d",
+        onClick: () => up(d => {d.savedJobs = d.savedJobs.filter(x => x.id !== j.id);})
+      }, "Remove")
+    )
+  );
   return /*#__PURE__*/React.createElement("div", {
     className: "screen space-y-3"
   }, /*#__PURE__*/React.createElement("div", {
@@ -934,7 +991,7 @@ function ResumeCover({
   const loadSavedJob = id => {
     const j = (db.savedJobs || []).find(x => String(x.id) === String(id));
     if (j) {
-      setJd(j.description || j.title + ' at ' + j.company);
+      setJd((j.jdPasted || ('Role: ' + j.title + '\nCompany: ' + j.company + '\nLocation: ' + (j.location || 'Delhi NCR') + '\nSalary: ' + (j.salary || 'Not disclosed') + '\nDomain: BFSI Operations, US 401k Retirement Plans, Team Leadership, SLA Management')));
       setCfForm(p => ({
         ...p,
         company: j.company,
@@ -945,7 +1002,7 @@ function ResumeCover({
   const tailor = async () => {
     setRes(null);
     const text = await ai.run({
-      system: 'You are an ATS resume expert. Compare the resume vs JD and return ONLY valid JSON with NO extra text, no markdown, no explanation. Format: {"ats":75,"keywords":[{"kw":"SLA Management","present":true},{"kw":"401k","present":true}],"bullets":["Led 12-member team achieving 100% SLA compliance","Reduced TAT by 50% via RPA implementation"],"summary":"Results-driven ops leader with 5+ yrs BFSI experience. Expert in 401k administration and team leadership."}',
+      system: 'You are an expert ATS resume writer and BFSI domain specialist. Analyze the resume against the JD and return ONLY valid JSON, no markdown, no explanation. JSON format: {"ats":0-100,"keywords":[{"kw":"keyword from JD","present":true/false}],"summary":"Rewritten 3-line professional summary tailored to this JD — achievement-led, specific, no fluff, 100% correct spelling/grammar","genpact_bullets":["Updated bullet 1 for Genpact role — keep existing strong bullets, replace weak ones with JD-matched achievement bullets, max 7 bullets, each under 20 words, 100% correct spelling"],"exl_bullets":["Updated bullet 1 for EXL role — same rules, max 4 bullets"],"sunlife_bullets":["Updated bullet 1 for SunLife — max 3 bullets"],"achievements":["Updated achievement 1 — keep all 4, rephrase to match JD keywords if needed"]}. CRITICAL: Every single word must have 100% correct spelling and grammar. No typos. No placeholders.',
       user: `RESUME:\n${resume}\n\nJD:\n${jd}`,
       max: 2500
     });
@@ -1052,11 +1109,26 @@ function ResumeCover({
       background: 'rgba(248,81,73,.12)',
       color: '#F85149'
     }
-  }, k.present ? '✓ ' : '✗ ', k.kw))), /*#__PURE__*/React.createElement(Btn, {
-    variant: "a",
-    full: true,
-    onClick: dlResume
-  }, "Download suggestions as .txt"))), tab === 'cover' && /*#__PURE__*/React.createElement(Card, {
+  }, k.present ? '✓ ' : '✗ ', k.kw))), /*#__PURE__*/React.createElement("div", {className: "flex gap-2 mt-2"},
+    /*#__PURE__*/React.createElement(Btn, {
+      variant: "p", full: true,
+      onClick: () => {
+        const tailoring = {
+          summary: res.summary,
+          genpact_bullets: res.genpact_bullets || RESUME_BASE.genpact_bullets,
+          exl_bullets: res.exl_bullets || RESUME_BASE.exl_bullets,
+          sunlife_bullets: res.sunlife_bullets || RESUME_BASE.sunlife_bullets,
+          aston_bullets: res.aston_bullets || RESUME_BASE.aston_bullets,
+          achievements: res.achievements || RESUME_BASE.achievements,
+          experience: res.experience
+        };
+        downloadResumePDF(tailoring, 'Shubham_Resume_Tailored_' + (cfForm.company||'').replace(/\s+/g,'_') + '.pdf');
+      }
+    }, "📄 Download Tailored Resume PDF"),
+    /*#__PURE__*/React.createElement(Btn, {
+      variant: "g",
+      onClick: dlResume
+    }, "TXT")))), tab === 'cover' && /*#__PURE__*/React.createElement(Card, {
     title: "Cover letter generator"
   }, /*#__PURE__*/React.createElement("div", {
     className: "grid grid-cols-2 gap-2"
@@ -1102,12 +1174,15 @@ function ResumeCover({
     rows: "10",
     value: letter,
     onChange: e => setLetter(e.target.value)
-  }), /*#__PURE__*/React.createElement(Btn, {
-    variant: "a",
-    full: true,
-    className: "mt-2",
-    onClick: () => copyText(letter, 'Cover letter')
-  }, "Copy"))));
+  }), /*#__PURE__*/React.createElement("div", {className: "flex gap-2 mt-2"},
+    /*#__PURE__*/React.createElement(Btn, {
+      variant: "p", full: true,
+      onClick: () => downloadCoverPDF(cfForm.company, cfForm.role, letter)
+    }, "📄 Download Cover PDF"),
+    /*#__PURE__*/React.createElement(Btn, {
+      variant: "g",
+      onClick: () => copyText(letter, 'Cover letter')
+    }, "Copy")))));
 }
 
 /* ═══════════════ MODULE 6: INTERVIEW PREP ═══════════════ */
@@ -1129,7 +1204,7 @@ function InterviewPrep({
     const j = (db.savedJobs || []).find(x => String(x.id) === String(id));
     if (j) {
       setCompany(j.company);
-      setJd(j.description || j.title + ' at ' + j.company);
+      setJd((j.jdPasted || ('Role: ' + j.title + '\nCompany: ' + j.company + '\nLocation: ' + (j.location || 'Delhi NCR') + '\nSalary: ' + (j.salary || 'Not disclosed') + '\nDomain: BFSI Operations, US 401k Retirement Plans, Team Leadership, SLA Management')));
     }
   };
   const genQ = async () => {
@@ -1437,12 +1512,13 @@ function ATSScanner({
   const resume = db.resumeText && db.resumeText.length > 100 && !db.resumeText.startsWith('[') ? db.resumeText : '[RESUME NOT FOUND: Go to More \u2192 My Resume and PASTE your resume text, then click Save resume]';
   const loadSaved = id => {
     const j = (db.savedJobs || []).find(x => String(x.id) === String(id));
-    if (j) setJd(j.description || j.title + ' at ' + j.company);
+    if (j) setJd((j.jdPasted || ('Role: ' + j.title + '\nCompany: ' + j.company + '\nLocation: ' + (j.location || 'Delhi NCR') + '\nSalary: ' + (j.salary || 'Not disclosed') + '\nDomain: BFSI Operations, US 401k Retirement Plans, Team Leadership, SLA Management')));
+    if (j && !j.jdPasted) toast('No JD saved for this job. Go to Job Search → Save job → Paste JD');
   };
   const go = async () => {
     setRes(null);
     const text = await ai.run({
-      system: 'ATS simulation. Return ONLY JSON: {"score":0-100,"missing":["keywords in JD but not resume"],"formatting":["formatting issues or empty"],"fixes":["3-5 specific one-liner fixes to make"]}',
+      system: 'You are an ATS (Applicant Tracking System) scanner. Score the resume against the JD. Return ONLY valid JSON, no markdown: {"score":0-100,"missing":["important JD keywords missing from resume"],"formatting":["actual formatting issues that hurt ATS, or leave empty array if clean"],"fixes":["3-5 specific actionable fixes to improve score"]}. Base score purely on keyword match and content relevance, not on whether resume looks formatted in plain text.',
       user: `RESUME:\n${resume}\n\nJD:\n${jd}`,
       max: 2000
     });
@@ -1468,9 +1544,9 @@ function ATSScanner({
   }, "Select saved job…"), (db.savedJobs || []).map(j => /*#__PURE__*/React.createElement("option", {
     key: j.id,
     value: j.id
-  }, j.company, " — ", j.title)))), !db.resumeText && /*#__PURE__*/React.createElement("div", {
+  }, j.company, " — ", j.title)))), (!db.resumeText || db.resumeText.length < 100) && /*#__PURE__*/React.createElement("div", {
     className: "err mb-2"
-  }, "Resume not uploaded. Go to More → My Resume first."), /*#__PURE__*/React.createElement(Lbl, null, "JD"), /*#__PURE__*/React.createElement("textarea", {
+  }, "Resume not found. Go to More → My Resume → paste your resume text → Save resume."), /*#__PURE__*/React.createElement(Lbl, null, "JD"), /*#__PURE__*/React.createElement("textarea", {
     className: "inp",
     rows: "5",
     value: jd,
@@ -1592,7 +1668,7 @@ function SkillGap({
   const [savedJobId, setSavedJobId] = useState('');
   const loadSaved = id => {
     const j = (db.savedJobs || []).find(x => String(x.id) === String(id));
-    if (j) setRole(j.title);
+    if (j) { setRole(j.title); }
   };
   const go = async () => {
     const text = await ai.run({
@@ -2724,6 +2800,139 @@ const TITLES = {
   prep: 'Interview prep',
   more: 'All tools'
 };
+
+/* ═══════════════ PDF GENERATORS ═══════════════ */
+const RESUME_BASE = {
+  summary: 'Results-driven Operations Leader with 5+ years of progressive experience in US Retirement Plan (401k) Administration within the BFSI sector. Currently managing a 12+ member team at Genpact as Management Trainee, consistently delivering 100% SLA compliance and zero missed deadlines. Demonstrated ability to drive process automation (50% TAT improvement), lead client governance, and build high-performance teams. Seeking an Assistant Manager Operations role in Delhi NCR to leverage deep domain expertise in a growth-oriented environment.',
+  competencies: 'US 401(k) Administration | Team & People Management | SLA / TAT Governance | Client & Stakeholder Relations | Root Cause Analysis (RCA) | Process Automation & RPA | Workforce Planning | MIS Reporting & Dashboards | Operational Excellence | MS Excel (Advanced) | Tableau | Performance Monitoring',
+  genpact_bullets: ['Lead end-to-end US 401(k) retirement plan operations for a team of 12+ associates, maintaining 100% regulatory and compliance adherence across all transactions.','Consistently achieve 100% SLA/TAT targets with zero missed deliverables, recognised by senior leadership for operational stability.','Drive team productivity through daily performance huddles, structured coaching, and KPI-based performance monitoring frameworks.','Serve as primary escalation point for client governance calls, presenting risk updates, operational dashboards, and strategic improvement plans to senior stakeholders.','Design and deliver daily MIS reports and SLA dashboards, enabling data-driven decision-making for both client and internal management.','Conduct Root Cause Analysis (RCA) on escalations and implement CAPA measures, reducing repeat errors and improving service quality.','Manage workforce capacity planning, shift scheduling, and leave coverage to ensure zero operational disruption during peak volumes.'],
+  exl_bullets: ['Managed complex 401(k) Money Out transactions — withdrawals, distributions, loans, hardships, and Required Minimum Distributions (RMDs) — with 100% compliance to federal regulations.','Served as operational quality anchor for the team, conducting audits and providing real-time guidance that maintained consistently high accuracy benchmarks.','Mentored and onboarded new hires, reducing ramp-up time significantly through structured SME coaching and hands-on quality reviews.','Identified and flagged process gaps, contributing directly to escalation reduction and SLA quality improvements across the team.'],
+  sunlife_bullets: ['Executed high-volume US and Canada retirement plan transactions with 100% adherence to client-specific protocols and federal regulatory requirements.','Reduced client escalations through comprehensive root-cause analyses, consistently surpassing SLA quality standards.','Built strong domain expertise in cross-border retirement plan processing, forming the foundation for future SME responsibilities.'],
+  aston_bullets: ['Supported daily financial operations and reporting, building foundational knowledge of BFSI processes and client communication standards.'],
+  achievements: ['Extra Miler Award (SME, EXL): Recognised for exceptional ownership, team leadership support, and going beyond role scope to drive operational outcomes.','Achievers & Performance Excellence Award: Ranked #1 performer for 3 consecutive months at SunLife Financial, exceeding quality benchmarks consistently.','50% Turnaround Time Reduction: Led RPA bot implementation initiative that reduced manual effort and rework by approximately 50%, directly improving process efficiency.','Zero Missed SLA Record: Maintained 100% SLA compliance throughout tenure at Genpact with no missed deliverables — a record acknowledged in client governance reviews.'],
+};
+
+function buildResumePDF(tailoring) {
+  if(!window.jspdf){toast('PDF library loading... try again in 2 seconds');return null;}
+  const {jsPDF} = window.jspdf;
+  const doc = new jsPDF({unit:'mm',format:'a4',orientation:'portrait'});
+  const W=210, LM=18, RM=18, CW=W-LM-RM;
+  let y=15;
+  const BLK=[0,0,0], DRK=[26,26,26], MID=[68,68,68];
+
+  const setF=(bold,size,col)=>{doc.setFont('helvetica',bold?'bold':'normal');doc.setFontSize(size);doc.setTextColor(...(col||DRK));};
+  const wrap=(txt,x,yy,mw,lh)=>{const ls=doc.splitTextToSize(txt,mw);doc.text(ls,x,yy);return yy+ls.length*lh;};
+  const bul=(txt)=>{setF(false,9,DRK);const ls=doc.splitTextToSize('• '+txt,CW-4);doc.text(ls,LM+4,y);y+=ls.length*4+1;if(y>272){doc.addPage();y=15;}};
+  const sec=(t)=>{y+=4;setF(true,10,BLK);doc.text(t,LM,y);y+=1.5;doc.setDrawColor(...BLK);doc.setLineWidth(0.4);doc.line(LM,y,W-RM,y);y+=4;};
+
+  // HEADER
+  setF(true,22,BLK); doc.text('SHUBHAM',LM,y); y+=6;
+  setF(false,9.5,MID); doc.text('Assistant Manager \u2013 Operations | BFSI | US 401(k) Retirement Plans | Team Leadership',LM,y); y+=4;
+  doc.setDrawColor(...BLK);doc.setLineWidth(0.3);doc.line(LM,y,W-RM,y);y+=3;
+  setF(false,8.5,MID); doc.text('shubham041399@gmail.com  |  +91-9354243483  |  Delhi / Pune, India  |  Open to Relocation: Delhi NCR',LM,y); y+=7;
+
+  // SUMMARY
+  sec('PROFESSIONAL SUMMARY');
+  setF(false,9,DRK);
+  y=wrap((tailoring&&tailoring.summary)||RESUME_BASE.summary,LM,y,CW,4.5)+3;
+
+  // COMPETENCIES
+  sec('CORE COMPETENCIES');
+  setF(false,8.5,DRK);
+  y=wrap((tailoring&&tailoring.competencies)||RESUME_BASE.competencies,LM,y,CW,4.5)+3;
+
+  // EXPERIENCE
+  sec('PROFESSIONAL EXPERIENCE');
+  const exps=[
+    {r:'Management Trainee (Operations)',c:'Genpact',p:'Oct 2025 \u2013 Present',l:'Pune, India',key:'genpact_bullets'},
+    {r:'Subject Matter Expert',c:'EXL Service',p:'Jan 2024 \u2013 Oct 2025',l:'Noida, India',key:'exl_bullets'},
+    {r:'Process Associate',c:'SunLife Financial',p:'Mar 2022 \u2013 Jan 2024',l:'Gurugram, India',key:'sunlife_bullets'},
+    {r:'Operations Trainee',c:'Aston Carter',p:'Mar 2021 \u2013 Mar 2022',l:'Gurugram, India',key:'aston_bullets'},
+  ];
+  for(const exp of exps){
+    if(y>260){doc.addPage();y=15;}
+    setF(true,9.5,BLK); doc.text(exp.r+' | '+exp.c,LM,y); y+=4;
+    setF(false,9,MID); doc.text(exp.p+' | '+exp.l,LM,y); y+=4;
+    let bullets = RESUME_BASE[exp.key];
+    if(tailoring&&tailoring.experience){
+      const te=tailoring.experience.find(e=>e.company===exp.c);
+      if(te&&te.bullets&&te.bullets.length) bullets=te.bullets;
+    }
+    for(const b of bullets) bul(b);
+    y+=1;
+  }
+
+  // ACHIEVEMENTS
+  if(y>250){doc.addPage();y=15;}
+  sec('KEY ACHIEVEMENTS');
+  const achs=(tailoring&&tailoring.achievements)||RESUME_BASE.achievements;
+  for(const a of achs) bul(a);
+
+  // PROJECTS
+  if(y>240){doc.addPage();y=15;}
+  sec('KEY PROJECTS');
+  const projs=[
+    {t:'Automation & RPA Integration',b:'Collaborated with transformation teams to implement RPA bots for high-volume retirement plan workflows, achieving ~50% reduction in manual processing time and rework.'},
+    {t:'Escalation & Correction Analysis Framework',b:'Designed and implemented a structured RCA framework that systematically reduced repeat defects and client escalations, improving overall service quality scores.'},
+    {t:'BAU Transition & Capacity Ramp-Up',b:'Supported business-as-usual transition during a 6-month operational ramp-up, achieving 95\u201399% quality scores while maintaining full SLA compliance under peak load.'},
+  ];
+  for(const p of projs){
+    if(y>265){doc.addPage();y=15;}
+    setF(true,9,BLK); doc.text(p.t,LM,y); y+=4;
+    bul(p.b);
+  }
+
+  // EDUCATION
+  if(y>255){doc.addPage();y=15;}
+  sec('EDUCATION');
+  setF(false,9,DRK);
+  doc.text('Bachelor of Commerce (BCom) \u2013 University of Delhi, Delhi',LM,y); y+=5;
+  doc.text('High School Diploma (CBSE), Delhi',LM,y); y+=7;
+
+  // TECHNICAL
+  if(y>245){doc.addPage();y=15;}
+  sec('TECHNICAL SKILLS');
+  setF(false,9,DRK);
+  ['Reporting & Analytics: MS Excel (Advanced), VLOOKUP, Pivot Tables, Tableau, Dashboard Creation, MIS Reporting',
+   'Operations Tools: RPA (Bot Implementation Support), Workflow Automation, Queue Management Systems',
+   'Languages: English (Professional), Hindi (Native)'
+  ].forEach(t=>{y=wrap(t,LM,y,CW,4.5)+2;});
+
+  return doc;
+}
+
+function downloadResumePDF(tailoring,fname){
+  const doc=buildResumePDF(tailoring);
+  if(doc){doc.save(fname||'Shubham_Resume_Tailored.pdf');toast('Resume PDF downloaded \u2713');}
+}
+
+function downloadCoverPDF(company,role,letter){
+  if(!window.jspdf){toast('PDF library loading...');return;}
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({unit:'mm',format:'a4'});
+  const LM=25,W=210,CW=160;
+  let y=30;
+  doc.setFont('helvetica','bold');doc.setFontSize(12);doc.setTextColor(0,0,0);
+  doc.text('SHUBHAM',LM,y);y+=6;
+  doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(68,68,68);
+  doc.text('shubham041399@gmail.com | +91-9354243483 | Delhi / Pune, India',LM,y);y+=7;
+  doc.setDrawColor(0);doc.setLineWidth(0.3);doc.line(LM,y,W-25,y);y+=8;
+  const today=new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'});
+  doc.setFont('helvetica','normal');doc.setFontSize(9.5);doc.setTextColor(26,26,26);
+  doc.text(today,LM,y);y+=6;
+  doc.text('Hiring Manager, '+company,LM,y);y+=10;
+  doc.setFont('helvetica','bold');doc.setFontSize(9.5);
+  doc.text('Re: Application for '+role,LM,y);y+=8;
+  doc.setFont('helvetica','normal');doc.setFontSize(9.5);doc.setTextColor(26,26,26);
+  const lines=doc.splitTextToSize(letter,CW);
+  doc.text(lines,LM,y);y+=lines.length*5+10;
+  doc.text('Sincerely,',LM,y);y+=10;
+  doc.setFont('helvetica','bold');doc.text('Shubham',LM,y);
+  doc.save('Cover_Letter_'+company.replace(/\s+/g,'_')+'.pdf');
+  toast('Cover letter PDF downloaded \u2713');
+}
+
+
 function App() {
   const [db, setDb] = useState(loadDB);
   const [screen, setScreen] = useState(!loadDB().apiKey ? 'settings' : 'dashboard');
