@@ -994,6 +994,254 @@ TARGET: Assistant Manager Operations / AM Operations BFSI, Delhi NCR, 14+ LPA`;
 }
 
 /* ═══════════════ MODULE 4+5: RESUME TAILOR + COVER LETTER ═══════════════ */
+const RESUME_TEMPLATES = [
+  {id:'classic',name:'Classic Executive',desc:'Clean black & white, bold headers, traditional'},
+  {id:'modern',name:'Modern Minimal',desc:'Thin lines, generous whitespace, contemporary'},
+  {id:'sidebar',name:'Left Sidebar',desc:'Two-column with accent sidebar, very ATS-safe'},
+  {id:'compact',name:'Compact Pro',desc:'Dense, fits more in 1 page, tight spacing'},
+  {id:'bold',name:'Bold Impact',desc:'Strong section headers, high contrast'},
+  {id:'elegant',name:'Elegant Lines',desc:'Thin decorative rules, refined spacing'},
+  {id:'corporate',name:'Corporate Blue',desc:'Professional with subtle color headers'},
+  {id:'clean',name:'Clean Serif',desc:'Serif name, clean body, classic look'},
+  {id:'accent',name:'Accent Bar',desc:'Left color accent bar, modern professional'},
+  {id:'executive',name:'Executive Plus',desc:'Large name, full-width header band'},
+  {id:'timeline',name:'Timeline Style',desc:'Dates on left margin, content right'},
+  {id:'tech',name:'Tech Modern',desc:'Monospace accents, clean grid'},
+  {id:'minimal2',name:'Ultra Minimal',desc:'Maximum whitespace, pure typography'},
+  {id:'sharp',name:'Sharp Angles',desc:'Angular dividers, geometric feel'},
+  {id:'gradient',name:'Soft Gradient Header',desc:'Light gradient header bar'},
+  {id:'boxed',name:'Boxed Sections',desc:'Sections in subtle boxes'},
+];
+
+const ACCENT_COLORS = [
+  {name:'Black',hex:'#000000',rgb:[0,0,0]},
+  {name:'Navy',hex:'#1B2F4E',rgb:[27,47,78]},
+  {name:'Royal Blue',hex:'#1A56DB',rgb:[26,86,219]},
+  {name:'Steel',hex:'#374151',rgb:[55,65,81]},
+  {name:'Forest',hex:'#065F46',rgb:[6,95,70]},
+  {name:'Maroon',hex:'#7B1D1D',rgb:[123,29,29]},
+  {name:'Purple',hex:'#4C1D95',rgb:[76,29,149]},
+  {name:'Teal',hex:'#0E7490',rgb:[14,116,144]},
+  {name:'Charcoal',hex:'#1F2937',rgb:[31,41,55]},
+  {name:'Slate',hex:'#475569',rgb:[71,85,105]},
+];
+
+function buildStyledResumePDF(tailoring, templateId, accentRgb) {
+  if(!window.jspdf){toast('PDF library loading...');return;}
+  const {jsPDF} = window.jspdf;
+  const doc = new jsPDF({unit:'mm',format:'a4'});
+  const W=210, H=297;
+  const AC = accentRgb || [0,0,0];
+  const BLK=[0,0,0], DRK=[30,30,30], MID=[90,90,90], LGT=[160,160,160];
+  const LM=18, RM=18, CW=W-LM-RM;
+  let y=0;
+
+  const t = tailoring || {};
+  const data = {
+    summary: t.summary || RESUME_BASE.summary,
+    competencies: t.competencies || RESUME_BASE.competencies,
+    genpact: t.genpact_bullets || RESUME_BASE.genpact_bullets,
+    exl: t.exl_bullets || RESUME_BASE.exl_bullets,
+    sunlife: t.sunlife_bullets || RESUME_BASE.sunlife_bullets,
+    aston: t.aston_bullets || RESUME_BASE.aston_bullets,
+    achievements: t.achievements || RESUME_BASE.achievements,
+  };
+
+  const sf=(bold,size,col)=>{doc.setFont('helvetica',bold?'bold':'normal');doc.setFontSize(size);doc.setTextColor(...(col||DRK));};
+  const line=(x1,yy,x2,col,w)=>{doc.setDrawColor(...(col||BLK));doc.setLineWidth(w||0.3);doc.line(x1,yy,x2,yy);};
+  const addPage=()=>{doc.addPage();y=15;};
+  const checkPage=(need=15)=>{if(y+need>278)addPage();};
+  const bul=(txt,lm,cw)=>{
+    sf(false,9,DRK);
+    const ls=doc.splitTextToSize('\u2022 '+txt,cw-4);
+    doc.text(ls,lm+4,y);y+=ls.length*4.2+1;
+    checkPage();
+  };
+  const exp=(role,co,period,loc,bullets,lm,cw)=>{
+    checkPage(20);
+    sf(true,9.5,DRK);doc.text(role,lm,y);y+=4.5;
+    sf(false,8.5,AC);doc.text(co+' \u2022 '+loc,lm,y);
+    sf(false,8.5,LGT);doc.text(period,W-RM-doc.getTextWidth(period),y);y+=5;
+    bullets.forEach(b=>bul(b,lm,cw));y+=1;
+  };
+
+  // ══ TEMPLATE RENDERERS ══
+  if(templateId==='classic'||templateId==='bold') {
+    y=20;
+    sf(true,22,BLK);doc.text('SHUBHAM',LM,y);y+=7;
+    sf(false,9,MID);doc.text('Assistant Manager \u2013 Operations | BFSI | US 401(k) Retirement Plans | Team Leadership',LM,y);y+=4;
+    line(LM,y,W-RM,BLK,templateId==='bold'?0.8:0.3);y+=4;
+    sf(false,8.5,MID);doc.text('shubham041399@gmail.com  |  +91-9354243483  |  Delhi / Pune  |  Open to Relocation: Delhi NCR',LM,y);y+=8;
+    const sec=(t)=>{checkPage(12);y+=2;sf(true,templateId==='bold'?11:10,AC);doc.text(t,LM,y);y+=1.5;line(LM,y,W-RM,AC,templateId==='bold'?0.6:0.3);y+=4;};
+    sec('PROFESSIONAL SUMMARY');sf(false,9,DRK);const sl=doc.splitTextToSize(data.summary,CW);doc.text(sl,LM,y);y+=sl.length*4.3+4;
+    sec('CORE COMPETENCIES');sf(false,8.5,DRK);const cl=doc.splitTextToSize(data.competencies,CW);doc.text(cl,LM,y);y+=cl.length*4.2+4;
+    sec('PROFESSIONAL EXPERIENCE');
+    exp('Management Trainee (Operations)','Genpact','Oct 2025 \u2013 Present','Pune, India',data.genpact,LM,CW);
+    exp('Subject Matter Expert','EXL Service','Jan 2024 \u2013 Oct 2025','Noida, India',data.exl,LM,CW);
+    exp('Process Associate','SunLife Financial','Mar 2022 \u2013 Jan 2024','Gurugram, India',data.sunlife,LM,CW);
+    exp('Operations Trainee','Aston Carter','Mar 2021 \u2013 Mar 2022','Gurugram, India',data.aston,LM,CW);
+    sec('KEY ACHIEVEMENTS');data.achievements.forEach(a=>bul(a,LM,CW));
+    checkPage(20);sec('EDUCATION');sf(false,9,DRK);doc.text('Bachelor of Commerce (BCom) \u2013 University of Delhi',LM,y);y+=5;
+    sec('TECHNICAL SKILLS');['Reporting & Analytics: MS Excel (Advanced), VLOOKUP, Pivot Tables, Tableau, Dashboard Creation, MIS Reporting','Operations Tools: RPA (Bot Implementation Support), Workflow Automation, Queue Management Systems','Languages: English (Professional), Hindi (Native)'].forEach(t=>{sf(false,8.5,DRK);const l=doc.splitTextToSize(t,CW);doc.text(l,LM,y);y+=l.length*4.2+2;});
+  }
+
+  else if(templateId==='modern'||templateId==='minimal2'||templateId==='elegant') {
+    y=25;
+    sf(true,24,BLK);doc.text('Shubham',LM,y);y+=7;
+    sf(false,9,MID);doc.text('Assistant Manager \u2013 Operations | BFSI | US 401(k) | Team Leadership',LM,y);y+=4.5;
+    if(templateId==='elegant'){line(LM,y,W-RM,AC,0.2);y+=1;line(LM,y+0.8,W-RM,AC,0.6);y+=4;}else{line(LM,y,W-RM,templateId==='minimal2'?LGT:AC,0.4);y+=4;}
+    sf(false,8,MID);doc.text('shubham041399@gmail.com  \u00b7  +91-9354243483  \u00b7  Delhi / Pune  \u00b7  Open to Delhi NCR',LM,y);y+=10;
+    const sec=(t)=>{checkPage(12);y+=4;sf(true,8,AC);doc.text(t.toUpperCase(),LM,y);y+=1.5;if(templateId!=='minimal2')line(LM,y,W-RM,templateId==='elegant'?[220,220,220]:LGT,0.25);y+=4;};
+    sec('Summary');sf(false,9,DRK);const sl=doc.splitTextToSize(data.summary,CW);doc.text(sl,LM,y);y+=sl.length*4.3+4;
+    sec('Competencies');sf(false,8.5,DRK);const cl=doc.splitTextToSize(data.competencies,CW);doc.text(cl,LM,y);y+=cl.length*4.2+4;
+    sec('Experience');
+    exp('Management Trainee (Operations)','Genpact','Oct 2025 \u2013 Present','Pune',data.genpact,LM,CW);
+    exp('Subject Matter Expert','EXL Service','Jan 2024 \u2013 Oct 2025','Noida',data.exl,LM,CW);
+    exp('Process Associate','SunLife Financial','Mar 2022 \u2013 Jan 2024','Gurugram',data.sunlife,LM,CW);
+    exp('Operations Trainee','Aston Carter','Mar 2021 \u2013 Mar 2022','Gurugram',data.aston,LM,CW);
+    sec('Achievements');data.achievements.forEach(a=>bul(a,LM,CW));
+    checkPage(20);sec('Education');sf(false,9,DRK);doc.text('Bachelor of Commerce (BCom) \u2013 University of Delhi',LM,y);y+=8;
+    sec('Technical Skills');['MS Excel Advanced, VLOOKUP, Pivot Tables, Tableau, MIS Reporting, Dashboard Creation','RPA Bot Implementation, Workflow Automation, Queue Management Systems','English (Professional), Hindi (Native)'].forEach(t=>{sf(false,8.5,DRK);const l=doc.splitTextToSize(t,CW);doc.text(l,LM,y);y+=l.length*4.2+2;});
+  }
+
+  else if(templateId==='executive'||templateId==='gradient') {
+    // Full-width header band
+    doc.setFillColor(...AC);doc.rect(0,0,W,38,templateId==='gradient'?'F':'F');
+    if(templateId==='gradient'){doc.setFillColor(AC[0]+30,AC[1]+30,AC[2]+30);doc.rect(0,25,W,13,'F');}
+    y=14;
+    sf(true,22,[255,255,255]);doc.text('SHUBHAM',LM,y);
+    sf(false,8.5,[220,220,220]);doc.text('Assistant Manager Operations  |  BFSI  |  US 401(k)  |  Delhi NCR',LM,y+7);
+    sf(false,7.5,[200,200,200]);doc.text('shubham041399@gmail.com  |  +91-9354243483  |  Open to Relocation',LM,y+13);
+    y=48;
+    const sec=(t)=>{checkPage(12);y+=3;sf(true,9.5,AC);doc.text(t,LM,y);y+=1.5;line(LM,y,W-RM,AC,0.4);y+=4;};
+    sec('PROFESSIONAL SUMMARY');sf(false,9,DRK);const sl=doc.splitTextToSize(data.summary,CW);doc.text(sl,LM,y);y+=sl.length*4.3+4;
+    sec('CORE COMPETENCIES');sf(false,8.5,DRK);const cl=doc.splitTextToSize(data.competencies,CW);doc.text(cl,LM,y);y+=cl.length*4.2+4;
+    sec('PROFESSIONAL EXPERIENCE');
+    exp('Management Trainee (Operations)','Genpact','Oct 2025 \u2013 Present','Pune, India',data.genpact,LM,CW);
+    exp('Subject Matter Expert','EXL Service','Jan 2024 \u2013 Oct 2025','Noida, India',data.exl,LM,CW);
+    exp('Process Associate','SunLife Financial','Mar 2022 \u2013 Jan 2024','Gurugram, India',data.sunlife,LM,CW);
+    exp('Operations Trainee','Aston Carter','Mar 2021 \u2013 Mar 2022','Gurugram, India',data.aston,LM,CW);
+    sec('KEY ACHIEVEMENTS');data.achievements.forEach(a=>bul(a,LM,CW));
+    checkPage(20);sec('EDUCATION');sf(false,9,DRK);doc.text('Bachelor of Commerce (BCom) \u2013 University of Delhi',LM,y);y+=8;
+    sec('TECHNICAL SKILLS');['MS Excel Advanced, VLOOKUP, Pivot Tables, Tableau, MIS Reporting','RPA Bot Implementation, Workflow Automation, Queue Management','English (Professional), Hindi (Native)'].forEach(t=>{sf(false,8.5,DRK);const l=doc.splitTextToSize(t,CW);doc.text(l,LM,y);y+=l.length*4.2+2;});
+  }
+
+  else if(templateId==='accent'||templateId==='sidebar') {
+    // Left accent bar
+    doc.setFillColor(...AC);doc.rect(0,0,5,H,'F');
+    const LM2=12;const CW2=W-LM2-RM;
+    y=18;
+    sf(true,20,BLK);doc.text('SHUBHAM',LM2,y);y+=6;
+    sf(false,9,AC);doc.text('Assistant Manager \u2013 Operations | BFSI | US 401(k) | Team Leadership',LM2,y);y+=4;
+    line(LM2,y,W-RM,LGT,0.3);y+=3;
+    sf(false,8,MID);doc.text('shubham041399@gmail.com  |  +91-9354243483  |  Delhi / Pune  |  Open to Delhi NCR',LM2,y);y+=9;
+    const sec=(t)=>{checkPage(12);y+=3;doc.setFillColor(...AC);doc.rect(LM2,y-3.5,2.5,5,'F');sf(true,9.5,AC);doc.text(t,LM2+5,y);y+=2;line(LM2,y,W-RM,LGT,0.2);y+=4;};
+    sec('PROFESSIONAL SUMMARY');sf(false,9,DRK);const sl=doc.splitTextToSize(data.summary,CW2-5);doc.text(sl,LM2+5,y);y+=sl.length*4.3+4;
+    sec('CORE COMPETENCIES');sf(false,8.5,DRK);const cl=doc.splitTextToSize(data.competencies,CW2-5);doc.text(cl,LM2+5,y);y+=cl.length*4.2+4;
+    sec('PROFESSIONAL EXPERIENCE');
+    exp('Management Trainee (Operations)','Genpact','Oct 2025 \u2013 Present','Pune',data.genpact,LM2+3,CW2-3);
+    exp('Subject Matter Expert','EXL Service','Jan 2024 \u2013 Oct 2025','Noida',data.exl,LM2+3,CW2-3);
+    exp('Process Associate','SunLife Financial','Mar 2022 \u2013 Jan 2024','Gurugram',data.sunlife,LM2+3,CW2-3);
+    exp('Operations Trainee','Aston Carter','Mar 2021 \u2013 Mar 2022','Gurugram',data.aston,LM2+3,CW2-3);
+    sec('KEY ACHIEVEMENTS');data.achievements.forEach(a=>bul(a,LM2+3,CW2-3));
+    checkPage(20);sec('EDUCATION');sf(false,9,DRK);doc.text('Bachelor of Commerce (BCom) \u2013 University of Delhi',LM2+5,y);y+=8;
+    sec('TECHNICAL SKILLS');['MS Excel Advanced, VLOOKUP, Pivot Tables, Tableau, MIS Reporting','RPA Support, Workflow Automation, Queue Management','English (Professional), Hindi (Native)'].forEach(t=>{sf(false,8.5,DRK);const l=doc.splitTextToSize(t,CW2);doc.text(l,LM2+5,y);y+=l.length*4.2+2;});
+  }
+
+  else {
+    // Default: same as classic
+    y=20;
+    sf(true,22,BLK);doc.text('SHUBHAM',LM,y);y+=7;
+    sf(false,9,MID);doc.text('Assistant Manager \u2013 Operations | BFSI | US 401(k) Retirement Plans | Team Leadership',LM,y);y+=4;
+    line(LM,y,W-RM,AC,0.4);y+=4;
+    sf(false,8.5,MID);doc.text('shubham041399@gmail.com  |  +91-9354243483  |  Delhi / Pune  |  Open to Relocation: Delhi NCR',LM,y);y+=8;
+    const sec=(t)=>{checkPage(12);y+=2;sf(true,10,AC);doc.text(t,LM,y);y+=1.5;line(LM,y,W-RM,AC,0.3);y+=4;};
+    sec('PROFESSIONAL SUMMARY');sf(false,9,DRK);const sl=doc.splitTextToSize(data.summary,CW);doc.text(sl,LM,y);y+=sl.length*4.3+4;
+    sec('CORE COMPETENCIES');sf(false,8.5,DRK);const cl=doc.splitTextToSize(data.competencies,CW);doc.text(cl,LM,y);y+=cl.length*4.2+4;
+    sec('PROFESSIONAL EXPERIENCE');
+    exp('Management Trainee (Operations)','Genpact','Oct 2025 \u2013 Present','Pune, India',data.genpact,LM,CW);
+    exp('Subject Matter Expert','EXL Service','Jan 2024 \u2013 Oct 2025','Noida, India',data.exl,LM,CW);
+    exp('Process Associate','SunLife Financial','Mar 2022 \u2013 Jan 2024','Gurugram, India',data.sunlife,LM,CW);
+    exp('Operations Trainee','Aston Carter','Mar 2021 \u2013 Mar 2022','Gurugram, India',data.aston,LM,CW);
+    sec('KEY ACHIEVEMENTS');data.achievements.forEach(a=>bul(a,LM,CW));
+    checkPage(20);sec('EDUCATION');sf(false,9,DRK);doc.text('Bachelor of Commerce (BCom) \u2013 University of Delhi',LM,y);y+=8;
+    sec('TECHNICAL SKILLS');['MS Excel Advanced, VLOOKUP, Pivot Tables, Tableau, MIS Reporting','RPA Bot Implementation, Workflow Automation, Queue Management','English (Professional), Hindi (Native)'].forEach(t=>{sf(false,8.5,DRK);const l=doc.splitTextToSize(t,CW);doc.text(l,LM,y);y+=l.length*4.2+2;});
+  }
+
+  return doc;
+}
+
+function ResumeStylePicker({tailoring, company}) {
+  const [selTpl, setSelTpl] = useState('classic');
+  const [selColor, setSelColor] = useState(0);
+  const [open, setOpen] = useState(false);
+
+  const download = () => {
+    const ac = ACCENT_COLORS[selColor];
+    const doc = buildStyledResumePDF(tailoring, selTpl, ac.rgb);
+    if(doc) {
+      const tplName = (RESUME_TEMPLATES.find(t=>t.id===selTpl)||{name:selTpl}).name;
+      doc.save('Shubham_Resume_' + (company||'Tailored').replace(/\s+/g,'_') + '_' + tplName.replace(/\s+/g,'_') + '.pdf');
+      toast('Resume PDF downloaded \u2713');
+    }
+  };
+
+  if(!open) return React.createElement('div', {className:'mt-3'},
+    React.createElement(Btn, {full:true, variant:'p', onClick:()=>setOpen(true)}, '\uD83C\uDFA8 Choose Resume Style & Download PDF')
+  );
+
+  const tpl = RESUME_TEMPLATES.find(t=>t.id===selTpl);
+  return React.createElement('div', {className:'mt-3 border border-acc rounded-2xl p-4 space-y-4'},
+    React.createElement('div', {className:'flex items-center justify-between'},
+      React.createElement('h3', {className:'font-disp font-bold text-[15px] text-acc'}, '\uD83C\uDFA8 Choose your resume style'),
+      React.createElement('button', {onClick:()=>setOpen(false), className:'text-mut text-xl'}, '\u00d7')
+    ),
+
+    // Template grid
+    React.createElement('div', null,
+      React.createElement('p', {className:'text-[11px] text-mut uppercase font-semibold tracking-wide mb-2'}, 'Template ('+RESUME_TEMPLATES.length+' styles)'),
+      React.createElement('div', {className:'grid grid-cols-2 gap-2'},
+        RESUME_TEMPLATES.map(t => React.createElement('button', {
+          key: t.id,
+          onClick: () => setSelTpl(t.id),
+          className: 'text-left p-2.5 rounded-xl border text-[12px] transition-all ' + (selTpl===t.id ? 'border-acc bg-acc/10 text-acc' : 'border-line text-mut hover:border-mut')
+        },
+          React.createElement('div', {className:'font-semibold text-[12px]'}, t.name),
+          React.createElement('div', {className:'text-[10px] opacity-70 mt-0.5'}, t.desc)
+        ))
+      )
+    ),
+
+    // Color picker
+    React.createElement('div', null,
+      React.createElement('p', {className:'text-[11px] text-mut uppercase font-semibold tracking-wide mb-2'}, 'Accent colour'),
+      React.createElement('div', {className:'flex flex-wrap gap-2'},
+        ACCENT_COLORS.map((c,i) => React.createElement('button', {
+          key: i,
+          onClick: () => setSelColor(i),
+          title: c.name,
+          className: 'w-8 h-8 rounded-full border-2 transition-all ' + (selColor===i ? 'border-acc scale-110' : 'border-transparent'),
+          style: {background: c.hex}
+        }))
+      ),
+      React.createElement('p', {className:'text-xs text-mut mt-1'}, 'Selected: ', React.createElement('span', {className:'font-semibold', style:{color:ACCENT_COLORS[selColor].hex}}, ACCENT_COLORS[selColor].name))
+    ),
+
+    // Selected preview info
+    React.createElement('div', {className:'bg-bg border border-line rounded-xl p-3'},
+      React.createElement('div', {className:'text-sm font-semibold'}, (tpl&&tpl.name)),
+      React.createElement('div', {className:'text-xs text-mut mt-0.5'}, (tpl&&tpl.desc)),
+      React.createElement('div', {className:'text-xs text-acc mt-1'}, '\u2713 ATS-friendly \u00b7 \u2713 No graphics/tables that break parsers \u00b7 \u2713 Helvetica font')
+    ),
+
+    // Download button
+    React.createElement(Btn, {full:true, variant:'p', onClick:download},
+      '\u2B07 Download PDF \u2014 ' + (tpl&&tpl.name) + ' in ' + ACCENT_COLORS[selColor].name
+    )
+  );
+}
+
+
 function ResumeCover({
   db,
   up
@@ -2872,254 +3120,6 @@ const RESUME_BASE = {
 
 
 /* ═══════════════ RESUME STYLE PICKER ═══════════════ */
-const RESUME_TEMPLATES = [
-  {id:'classic',name:'Classic Executive',desc:'Clean black & white, bold headers, traditional'},
-  {id:'modern',name:'Modern Minimal',desc:'Thin lines, generous whitespace, contemporary'},
-  {id:'sidebar',name:'Left Sidebar',desc:'Two-column with accent sidebar, very ATS-safe'},
-  {id:'compact',name:'Compact Pro',desc:'Dense, fits more in 1 page, tight spacing'},
-  {id:'bold',name:'Bold Impact',desc:'Strong section headers, high contrast'},
-  {id:'elegant',name:'Elegant Lines',desc:'Thin decorative rules, refined spacing'},
-  {id:'corporate',name:'Corporate Blue',desc:'Professional with subtle color headers'},
-  {id:'clean',name:'Clean Serif',desc:'Serif name, clean body, classic look'},
-  {id:'accent',name:'Accent Bar',desc:'Left color accent bar, modern professional'},
-  {id:'executive',name:'Executive Plus',desc:'Large name, full-width header band'},
-  {id:'timeline',name:'Timeline Style',desc:'Dates on left margin, content right'},
-  {id:'tech',name:'Tech Modern',desc:'Monospace accents, clean grid'},
-  {id:'minimal2',name:'Ultra Minimal',desc:'Maximum whitespace, pure typography'},
-  {id:'sharp',name:'Sharp Angles',desc:'Angular dividers, geometric feel'},
-  {id:'gradient',name:'Soft Gradient Header',desc:'Light gradient header bar'},
-  {id:'boxed',name:'Boxed Sections',desc:'Sections in subtle boxes'},
-];
-
-const ACCENT_COLORS = [
-  {name:'Black',hex:'#000000',rgb:[0,0,0]},
-  {name:'Navy',hex:'#1B2F4E',rgb:[27,47,78]},
-  {name:'Royal Blue',hex:'#1A56DB',rgb:[26,86,219]},
-  {name:'Steel',hex:'#374151',rgb:[55,65,81]},
-  {name:'Forest',hex:'#065F46',rgb:[6,95,70]},
-  {name:'Maroon',hex:'#7B1D1D',rgb:[123,29,29]},
-  {name:'Purple',hex:'#4C1D95',rgb:[76,29,149]},
-  {name:'Teal',hex:'#0E7490',rgb:[14,116,144]},
-  {name:'Charcoal',hex:'#1F2937',rgb:[31,41,55]},
-  {name:'Slate',hex:'#475569',rgb:[71,85,105]},
-];
-
-function buildStyledResumePDF(tailoring, templateId, accentRgb) {
-  if(!window.jspdf){toast('PDF library loading...');return;}
-  const {jsPDF} = window.jspdf;
-  const doc = new jsPDF({unit:'mm',format:'a4'});
-  const W=210, H=297;
-  const AC = accentRgb || [0,0,0];
-  const BLK=[0,0,0], DRK=[30,30,30], MID=[90,90,90], LGT=[160,160,160];
-  const LM=18, RM=18, CW=W-LM-RM;
-  let y=0;
-
-  const t = tailoring || {};
-  const data = {
-    summary: t.summary || RESUME_BASE.summary,
-    competencies: t.competencies || RESUME_BASE.competencies,
-    genpact: t.genpact_bullets || RESUME_BASE.genpact_bullets,
-    exl: t.exl_bullets || RESUME_BASE.exl_bullets,
-    sunlife: t.sunlife_bullets || RESUME_BASE.sunlife_bullets,
-    aston: t.aston_bullets || RESUME_BASE.aston_bullets,
-    achievements: t.achievements || RESUME_BASE.achievements,
-  };
-
-  const sf=(bold,size,col)=>{doc.setFont('helvetica',bold?'bold':'normal');doc.setFontSize(size);doc.setTextColor(...(col||DRK));};
-  const line=(x1,yy,x2,col,w)=>{doc.setDrawColor(...(col||BLK));doc.setLineWidth(w||0.3);doc.line(x1,yy,x2,yy);};
-  const addPage=()=>{doc.addPage();y=15;};
-  const checkPage=(need=15)=>{if(y+need>278)addPage();};
-  const bul=(txt,lm,cw)=>{
-    sf(false,9,DRK);
-    const ls=doc.splitTextToSize('\u2022 '+txt,cw-4);
-    doc.text(ls,lm+4,y);y+=ls.length*4.2+1;
-    checkPage();
-  };
-  const exp=(role,co,period,loc,bullets,lm,cw)=>{
-    checkPage(20);
-    sf(true,9.5,DRK);doc.text(role,lm,y);y+=4.5;
-    sf(false,8.5,AC);doc.text(co+' \u2022 '+loc,lm,y);
-    sf(false,8.5,LGT);doc.text(period,W-RM-doc.getTextWidth(period),y);y+=5;
-    bullets.forEach(b=>bul(b,lm,cw));y+=1;
-  };
-
-  // ══ TEMPLATE RENDERERS ══
-  if(templateId==='classic'||templateId==='bold') {
-    y=20;
-    sf(true,22,BLK);doc.text('SHUBHAM',LM,y);y+=7;
-    sf(false,9,MID);doc.text('Assistant Manager \u2013 Operations | BFSI | US 401(k) Retirement Plans | Team Leadership',LM,y);y+=4;
-    line(LM,y,W-RM,BLK,templateId==='bold'?0.8:0.3);y+=4;
-    sf(false,8.5,MID);doc.text('shubham041399@gmail.com  |  +91-9354243483  |  Delhi / Pune  |  Open to Relocation: Delhi NCR',LM,y);y+=8;
-    const sec=(t)=>{checkPage(12);y+=2;sf(true,templateId==='bold'?11:10,AC);doc.text(t,LM,y);y+=1.5;line(LM,y,W-RM,AC,templateId==='bold'?0.6:0.3);y+=4;};
-    sec('PROFESSIONAL SUMMARY');sf(false,9,DRK);const sl=doc.splitTextToSize(data.summary,CW);doc.text(sl,LM,y);y+=sl.length*4.3+4;
-    sec('CORE COMPETENCIES');sf(false,8.5,DRK);const cl=doc.splitTextToSize(data.competencies,CW);doc.text(cl,LM,y);y+=cl.length*4.2+4;
-    sec('PROFESSIONAL EXPERIENCE');
-    exp('Management Trainee (Operations)','Genpact','Oct 2025 \u2013 Present','Pune, India',data.genpact,LM,CW);
-    exp('Subject Matter Expert','EXL Service','Jan 2024 \u2013 Oct 2025','Noida, India',data.exl,LM,CW);
-    exp('Process Associate','SunLife Financial','Mar 2022 \u2013 Jan 2024','Gurugram, India',data.sunlife,LM,CW);
-    exp('Operations Trainee','Aston Carter','Mar 2021 \u2013 Mar 2022','Gurugram, India',data.aston,LM,CW);
-    sec('KEY ACHIEVEMENTS');data.achievements.forEach(a=>bul(a,LM,CW));
-    checkPage(20);sec('EDUCATION');sf(false,9,DRK);doc.text('Bachelor of Commerce (BCom) \u2013 University of Delhi',LM,y);y+=5;
-    sec('TECHNICAL SKILLS');['Reporting & Analytics: MS Excel (Advanced), VLOOKUP, Pivot Tables, Tableau, Dashboard Creation, MIS Reporting','Operations Tools: RPA (Bot Implementation Support), Workflow Automation, Queue Management Systems','Languages: English (Professional), Hindi (Native)'].forEach(t=>{sf(false,8.5,DRK);const l=doc.splitTextToSize(t,CW);doc.text(l,LM,y);y+=l.length*4.2+2;});
-  }
-
-  else if(templateId==='modern'||templateId==='minimal2'||templateId==='elegant') {
-    y=25;
-    sf(true,24,BLK);doc.text('Shubham',LM,y);y+=7;
-    sf(false,9,MID);doc.text('Assistant Manager \u2013 Operations | BFSI | US 401(k) | Team Leadership',LM,y);y+=4.5;
-    if(templateId==='elegant'){line(LM,y,W-RM,AC,0.2);y+=1;line(LM,y+0.8,W-RM,AC,0.6);y+=4;}else{line(LM,y,W-RM,templateId==='minimal2'?LGT:AC,0.4);y+=4;}
-    sf(false,8,MID);doc.text('shubham041399@gmail.com  \u00b7  +91-9354243483  \u00b7  Delhi / Pune  \u00b7  Open to Delhi NCR',LM,y);y+=10;
-    const sec=(t)=>{checkPage(12);y+=4;sf(true,8,AC);doc.text(t.toUpperCase(),LM,y);y+=1.5;if(templateId!=='minimal2')line(LM,y,W-RM,templateId==='elegant'?[220,220,220]:LGT,0.25);y+=4;};
-    sec('Summary');sf(false,9,DRK);const sl=doc.splitTextToSize(data.summary,CW);doc.text(sl,LM,y);y+=sl.length*4.3+4;
-    sec('Competencies');sf(false,8.5,DRK);const cl=doc.splitTextToSize(data.competencies,CW);doc.text(cl,LM,y);y+=cl.length*4.2+4;
-    sec('Experience');
-    exp('Management Trainee (Operations)','Genpact','Oct 2025 \u2013 Present','Pune',data.genpact,LM,CW);
-    exp('Subject Matter Expert','EXL Service','Jan 2024 \u2013 Oct 2025','Noida',data.exl,LM,CW);
-    exp('Process Associate','SunLife Financial','Mar 2022 \u2013 Jan 2024','Gurugram',data.sunlife,LM,CW);
-    exp('Operations Trainee','Aston Carter','Mar 2021 \u2013 Mar 2022','Gurugram',data.aston,LM,CW);
-    sec('Achievements');data.achievements.forEach(a=>bul(a,LM,CW));
-    checkPage(20);sec('Education');sf(false,9,DRK);doc.text('Bachelor of Commerce (BCom) \u2013 University of Delhi',LM,y);y+=8;
-    sec('Technical Skills');['MS Excel Advanced, VLOOKUP, Pivot Tables, Tableau, MIS Reporting, Dashboard Creation','RPA Bot Implementation, Workflow Automation, Queue Management Systems','English (Professional), Hindi (Native)'].forEach(t=>{sf(false,8.5,DRK);const l=doc.splitTextToSize(t,CW);doc.text(l,LM,y);y+=l.length*4.2+2;});
-  }
-
-  else if(templateId==='executive'||templateId==='gradient') {
-    // Full-width header band
-    doc.setFillColor(...AC);doc.rect(0,0,W,38,templateId==='gradient'?'F':'F');
-    if(templateId==='gradient'){doc.setFillColor(AC[0]+30,AC[1]+30,AC[2]+30);doc.rect(0,25,W,13,'F');}
-    y=14;
-    sf(true,22,[255,255,255]);doc.text('SHUBHAM',LM,y);
-    sf(false,8.5,[220,220,220]);doc.text('Assistant Manager Operations  |  BFSI  |  US 401(k)  |  Delhi NCR',LM,y+7);
-    sf(false,7.5,[200,200,200]);doc.text('shubham041399@gmail.com  |  +91-9354243483  |  Open to Relocation',LM,y+13);
-    y=48;
-    const sec=(t)=>{checkPage(12);y+=3;sf(true,9.5,AC);doc.text(t,LM,y);y+=1.5;line(LM,y,W-RM,AC,0.4);y+=4;};
-    sec('PROFESSIONAL SUMMARY');sf(false,9,DRK);const sl=doc.splitTextToSize(data.summary,CW);doc.text(sl,LM,y);y+=sl.length*4.3+4;
-    sec('CORE COMPETENCIES');sf(false,8.5,DRK);const cl=doc.splitTextToSize(data.competencies,CW);doc.text(cl,LM,y);y+=cl.length*4.2+4;
-    sec('PROFESSIONAL EXPERIENCE');
-    exp('Management Trainee (Operations)','Genpact','Oct 2025 \u2013 Present','Pune, India',data.genpact,LM,CW);
-    exp('Subject Matter Expert','EXL Service','Jan 2024 \u2013 Oct 2025','Noida, India',data.exl,LM,CW);
-    exp('Process Associate','SunLife Financial','Mar 2022 \u2013 Jan 2024','Gurugram, India',data.sunlife,LM,CW);
-    exp('Operations Trainee','Aston Carter','Mar 2021 \u2013 Mar 2022','Gurugram, India',data.aston,LM,CW);
-    sec('KEY ACHIEVEMENTS');data.achievements.forEach(a=>bul(a,LM,CW));
-    checkPage(20);sec('EDUCATION');sf(false,9,DRK);doc.text('Bachelor of Commerce (BCom) \u2013 University of Delhi',LM,y);y+=8;
-    sec('TECHNICAL SKILLS');['MS Excel Advanced, VLOOKUP, Pivot Tables, Tableau, MIS Reporting','RPA Bot Implementation, Workflow Automation, Queue Management','English (Professional), Hindi (Native)'].forEach(t=>{sf(false,8.5,DRK);const l=doc.splitTextToSize(t,CW);doc.text(l,LM,y);y+=l.length*4.2+2;});
-  }
-
-  else if(templateId==='accent'||templateId==='sidebar') {
-    // Left accent bar
-    doc.setFillColor(...AC);doc.rect(0,0,5,H,'F');
-    const LM2=12;const CW2=W-LM2-RM;
-    y=18;
-    sf(true,20,BLK);doc.text('SHUBHAM',LM2,y);y+=6;
-    sf(false,9,AC);doc.text('Assistant Manager \u2013 Operations | BFSI | US 401(k) | Team Leadership',LM2,y);y+=4;
-    line(LM2,y,W-RM,LGT,0.3);y+=3;
-    sf(false,8,MID);doc.text('shubham041399@gmail.com  |  +91-9354243483  |  Delhi / Pune  |  Open to Delhi NCR',LM2,y);y+=9;
-    const sec=(t)=>{checkPage(12);y+=3;doc.setFillColor(...AC);doc.rect(LM2,y-3.5,2.5,5,'F');sf(true,9.5,AC);doc.text(t,LM2+5,y);y+=2;line(LM2,y,W-RM,LGT,0.2);y+=4;};
-    sec('PROFESSIONAL SUMMARY');sf(false,9,DRK);const sl=doc.splitTextToSize(data.summary,CW2-5);doc.text(sl,LM2+5,y);y+=sl.length*4.3+4;
-    sec('CORE COMPETENCIES');sf(false,8.5,DRK);const cl=doc.splitTextToSize(data.competencies,CW2-5);doc.text(cl,LM2+5,y);y+=cl.length*4.2+4;
-    sec('PROFESSIONAL EXPERIENCE');
-    exp('Management Trainee (Operations)','Genpact','Oct 2025 \u2013 Present','Pune',data.genpact,LM2+3,CW2-3);
-    exp('Subject Matter Expert','EXL Service','Jan 2024 \u2013 Oct 2025','Noida',data.exl,LM2+3,CW2-3);
-    exp('Process Associate','SunLife Financial','Mar 2022 \u2013 Jan 2024','Gurugram',data.sunlife,LM2+3,CW2-3);
-    exp('Operations Trainee','Aston Carter','Mar 2021 \u2013 Mar 2022','Gurugram',data.aston,LM2+3,CW2-3);
-    sec('KEY ACHIEVEMENTS');data.achievements.forEach(a=>bul(a,LM2+3,CW2-3));
-    checkPage(20);sec('EDUCATION');sf(false,9,DRK);doc.text('Bachelor of Commerce (BCom) \u2013 University of Delhi',LM2+5,y);y+=8;
-    sec('TECHNICAL SKILLS');['MS Excel Advanced, VLOOKUP, Pivot Tables, Tableau, MIS Reporting','RPA Support, Workflow Automation, Queue Management','English (Professional), Hindi (Native)'].forEach(t=>{sf(false,8.5,DRK);const l=doc.splitTextToSize(t,CW2);doc.text(l,LM2+5,y);y+=l.length*4.2+2;});
-  }
-
-  else {
-    // Default: same as classic
-    y=20;
-    sf(true,22,BLK);doc.text('SHUBHAM',LM,y);y+=7;
-    sf(false,9,MID);doc.text('Assistant Manager \u2013 Operations | BFSI | US 401(k) Retirement Plans | Team Leadership',LM,y);y+=4;
-    line(LM,y,W-RM,AC,0.4);y+=4;
-    sf(false,8.5,MID);doc.text('shubham041399@gmail.com  |  +91-9354243483  |  Delhi / Pune  |  Open to Relocation: Delhi NCR',LM,y);y+=8;
-    const sec=(t)=>{checkPage(12);y+=2;sf(true,10,AC);doc.text(t,LM,y);y+=1.5;line(LM,y,W-RM,AC,0.3);y+=4;};
-    sec('PROFESSIONAL SUMMARY');sf(false,9,DRK);const sl=doc.splitTextToSize(data.summary,CW);doc.text(sl,LM,y);y+=sl.length*4.3+4;
-    sec('CORE COMPETENCIES');sf(false,8.5,DRK);const cl=doc.splitTextToSize(data.competencies,CW);doc.text(cl,LM,y);y+=cl.length*4.2+4;
-    sec('PROFESSIONAL EXPERIENCE');
-    exp('Management Trainee (Operations)','Genpact','Oct 2025 \u2013 Present','Pune, India',data.genpact,LM,CW);
-    exp('Subject Matter Expert','EXL Service','Jan 2024 \u2013 Oct 2025','Noida, India',data.exl,LM,CW);
-    exp('Process Associate','SunLife Financial','Mar 2022 \u2013 Jan 2024','Gurugram, India',data.sunlife,LM,CW);
-    exp('Operations Trainee','Aston Carter','Mar 2021 \u2013 Mar 2022','Gurugram, India',data.aston,LM,CW);
-    sec('KEY ACHIEVEMENTS');data.achievements.forEach(a=>bul(a,LM,CW));
-    checkPage(20);sec('EDUCATION');sf(false,9,DRK);doc.text('Bachelor of Commerce (BCom) \u2013 University of Delhi',LM,y);y+=8;
-    sec('TECHNICAL SKILLS');['MS Excel Advanced, VLOOKUP, Pivot Tables, Tableau, MIS Reporting','RPA Bot Implementation, Workflow Automation, Queue Management','English (Professional), Hindi (Native)'].forEach(t=>{sf(false,8.5,DRK);const l=doc.splitTextToSize(t,CW);doc.text(l,LM,y);y+=l.length*4.2+2;});
-  }
-
-  return doc;
-}
-
-function ResumeStylePicker({tailoring, company}) {
-  const [selTpl, setSelTpl] = useState('classic');
-  const [selColor, setSelColor] = useState(0);
-  const [open, setOpen] = useState(false);
-
-  const download = () => {
-    const ac = ACCENT_COLORS[selColor];
-    const doc = buildStyledResumePDF(tailoring, selTpl, ac.rgb);
-    if(doc) {
-      const tplName = RESUME_TEMPLATES.find(t=>t.id===selTpl)?.name || selTpl;
-      doc.save('Shubham_Resume_' + (company||'Tailored').replace(/\s+/g,'_') + '_' + tplName.replace(/\s+/g,'_') + '.pdf');
-      toast('Resume PDF downloaded \u2713');
-    }
-  };
-
-  if(!open) return React.createElement('div', {className:'mt-3'},
-    React.createElement(Btn, {full:true, variant:'p', onClick:()=>setOpen(true)}, '\uD83C\uDFA8 Choose Resume Style & Download PDF')
-  );
-
-  const tpl = RESUME_TEMPLATES.find(t=>t.id===selTpl);
-  return React.createElement('div', {className:'mt-3 border border-acc rounded-2xl p-4 space-y-4'},
-    React.createElement('div', {className:'flex items-center justify-between'},
-      React.createElement('h3', {className:'font-disp font-bold text-[15px] text-acc'}, '\uD83C\uDFA8 Choose your resume style'),
-      React.createElement('button', {onClick:()=>setOpen(false), className:'text-mut text-xl'}, '\u00d7')
-    ),
-
-    // Template grid
-    React.createElement('div', null,
-      React.createElement('p', {className:'text-[11px] text-mut uppercase font-semibold tracking-wide mb-2'}, 'Template ('+RESUME_TEMPLATES.length+' styles)'),
-      React.createElement('div', {className:'grid grid-cols-2 gap-2'},
-        RESUME_TEMPLATES.map(t => React.createElement('button', {
-          key: t.id,
-          onClick: () => setSelTpl(t.id),
-          className: 'text-left p-2.5 rounded-xl border text-[12px] transition-all ' + (selTpl===t.id ? 'border-acc bg-acc/10 text-acc' : 'border-line text-mut hover:border-mut')
-        },
-          React.createElement('div', {className:'font-semibold text-[12px]'}, t.name),
-          React.createElement('div', {className:'text-[10px] opacity-70 mt-0.5'}, t.desc)
-        ))
-      )
-    ),
-
-    // Color picker
-    React.createElement('div', null,
-      React.createElement('p', {className:'text-[11px] text-mut uppercase font-semibold tracking-wide mb-2'}, 'Accent colour'),
-      React.createElement('div', {className:'flex flex-wrap gap-2'},
-        ACCENT_COLORS.map((c,i) => React.createElement('button', {
-          key: i,
-          onClick: () => setSelColor(i),
-          title: c.name,
-          className: 'w-8 h-8 rounded-full border-2 transition-all ' + (selColor===i ? 'border-acc scale-110' : 'border-transparent'),
-          style: {background: c.hex}
-        }))
-      ),
-      React.createElement('p', {className:'text-xs text-mut mt-1'}, 'Selected: ', React.createElement('span', {className:'font-semibold', style:{color:ACCENT_COLORS[selColor].hex}}, ACCENT_COLORS[selColor].name))
-    ),
-
-    // Selected preview info
-    React.createElement('div', {className:'bg-bg border border-line rounded-xl p-3'},
-      React.createElement('div', {className:'text-sm font-semibold'}, tpl?.name),
-      React.createElement('div', {className:'text-xs text-mut mt-0.5'}, tpl?.desc),
-      React.createElement('div', {className:'text-xs text-acc mt-1'}, '\u2713 ATS-friendly \u00b7 \u2713 No graphics/tables that break parsers \u00b7 \u2713 Helvetica font')
-    ),
-
-    // Download button
-    React.createElement(Btn, {full:true, variant:'p', onClick:download},
-      '\u2B07 Download PDF \u2014 ' + tpl?.name + ' in ' + ACCENT_COLORS[selColor].name
-    )
-  );
-}
-
-
 function buildResumePDF(tailoring) {
   if(!window.jspdf){toast('PDF library loading... try again in 2 seconds');return null;}
   const {jsPDF} = window.jspdf;
