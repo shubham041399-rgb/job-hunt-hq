@@ -776,8 +776,8 @@ function JobSearch({
   const search = async () => {
     setResults([]);
     const text = await ai.run({
-      system: `You are a job search assistant for an Indian BFSI operations professional. Find RECENT, NON-EXPIRED job openings. Return ONLY a JSON array max 8 jobs: [{"title":"","company":"","location":"","salary":"","source":"Naukri/LinkedIn/Company Site","url":"","match":0-100,"posted":"recent/this week/this month","expired":false}]. Only include jobs where expired=false. If you cannot verify recency, omit the job. Never invent jobs.`,
-      user: `Candidate: 5+ yrs BFSI ops, US 401k expertise, team lead 12 FTEs, Delhi NCR preference, 14+ LPA target.\nSearch: role="${role}" location="${loc}" domain="${domain}"\nFind live, non-expired openings on Naukri, LinkedIn, company career pages. Filter out expired/closed roles.`,
+      system: `You are a job search assistant for an Indian BFSI operations professional. Generate a JSON array of 6-8 REALISTIC job search suggestions for this profile. These are SEARCH SUGGESTIONS not real jobs — user will click to search on Naukri. Return ONLY JSON array: [{"title":"exact role title to search","company":"company name or empty string","location":"city","salary":"estimated range e.g. 12-18 LPA","source":"Naukri","url":"https://www.naukri.com/jobs-in-delhi?q=ROLE&l=CITY where ROLE and CITY are URL encoded","match":0-100,"posted":"Search on Naukri","expired":false}]. Make URLs real Naukri search URLs. Focus on AM Operations, Team Lead, Process Manager roles in BFSI/KPO/BPO. Mix Delhi NCR and Pune locations.`,
+      user: `Candidate: Shubham, 5+ yrs BFSI Operations, US 401k retirement plans expert, team lead 12 FTEs, Delhi NCR / Pune, 14+ LPA target, AM-level roles.\nGenerate 6-8 Naukri search suggestion cards for: role="${role}" location="${loc}" domain="${domain}".\nMake each URL a real working Naukri search: https://www.naukri.com/ROLE-jobs-in-LOCATION where role and location are hyphenated lowercase.`,
       max: 3000
     });
     if (!text) return;
@@ -911,12 +911,27 @@ function JobSearch({
     onChange: e => setDomain(e.target.value)
   }, ['401k Retirement', 'BFSI Operations', 'KPO Operations', 'Group Benefits', 'Wealth Management', 'Insurance Ops', 'Financial Services'].map(d => /*#__PURE__*/React.createElement("option", {
     key: d
-  }, d))))), /*#__PURE__*/React.createElement(Btn, {
+  }, d))))), /*#__PURE__*/React.createElement("div", {className: "grid grid-cols-2 gap-2 mt-3"},
+    /*#__PURE__*/React.createElement("a", {
+      href: "https://www.naukri.com/" + role.toLowerCase().replace(/\s+/g,'-') + "-jobs-in-" + loc.toLowerCase().replace(/\s+/g,'-'),
+      target: "_blank", rel: "noreferrer",
+      className: "btn btn-p text-center text-sm"
+    }, "\uD83D\uDD0D Search Naukri directly"),
+    /*#__PURE__*/React.createElement("a", {
+      href: "https://www.linkedin.com/jobs/search/?keywords=" + encodeURIComponent(role) + "&location=" + encodeURIComponent(loc),
+      target: "_blank", rel: "noreferrer",
+      className: "btn btn-a text-center text-sm"
+    }, "\uD83D\uDD0D Search LinkedIn")
+  ),
+  /*#__PURE__*/React.createElement("p", {className: "text-xs text-mut mt-2 text-center"},
+    "Or use AI suggestions below ↓"
+  ),
+  /*#__PURE__*/React.createElement(Btn, {
     full: true,
-    className: "mt-3",
+    className: "mt-2",
     onClick: search,
     disabled: ai.busy
-  }, "Search live jobs"), ai.busy && /*#__PURE__*/React.createElement(Busy, {
+  }, "Get AI search suggestions"), ai.busy && /*#__PURE__*/React.createElement(Busy, {
     msg: "Searching for non-expired jobs…"
   }), /*#__PURE__*/React.createElement(Err, {
     msg: ai.err
@@ -1002,7 +1017,7 @@ function ResumeCover({
   const tailor = async () => {
     setRes(null);
     const text = await ai.run({
-      system: 'You are an expert ATS resume writer and BFSI domain specialist. Analyze the resume against the JD and return ONLY valid JSON, no markdown, no explanation. JSON format: {"ats":0-100,"keywords":[{"kw":"keyword from JD","present":true/false}],"summary":"Rewritten 3-line professional summary tailored to this JD — achievement-led, specific, no fluff, 100% correct spelling/grammar","genpact_bullets":["Updated bullet 1 for Genpact role — keep existing strong bullets, replace weak ones with JD-matched achievement bullets, max 7 bullets, each under 20 words, 100% correct spelling"],"exl_bullets":["Updated bullet 1 for EXL role — same rules, max 4 bullets"],"sunlife_bullets":["Updated bullet 1 for SunLife — max 3 bullets"],"achievements":["Updated achievement 1 — keep all 4, rephrase to match JD keywords if needed"]}. CRITICAL: Every single word must have 100% correct spelling and grammar. No typos. No placeholders.',
+      system: 'You are an ATS resume expert for Indian BFSI hiring. Return ONLY a raw JSON object — no markdown, no backticks, no explanation, nothing before or after the JSON. Use this exact structure:\n{"ats":82,"keywords":[{"kw":"401k Administration","present":true},{"kw":"SLA Management","present":true}],"summary":"Results-driven BFSI Operations Leader with 5+ years in US 401(k) retirement plan administration. Currently managing 12+ member team at Genpact with 100% SLA compliance. Expert in process automation, client governance and team leadership.","genpact_bullets":["Lead end-to-end US 401(k) operations for 12+ associates maintaining 100% SLA compliance","Drive RPA automation reducing TAT by 50% across retirement plan workflows","Serve as primary client governance escalation point presenting risk dashboards to senior stakeholders","Conduct RCA and CAPA implementation reducing repeat errors by measurable margin","Design daily MIS reports enabling data-driven decisions for client and internal management"],"exl_bullets":["Managed complex 401(k) Money Out transactions including withdrawals loans hardships and RMDs with 100% federal compliance","Served as quality anchor conducting audits maintaining high accuracy benchmarks","Mentored new hires reducing ramp-up time through structured SME coaching"],"sunlife_bullets":["Executed high-volume US and Canada retirement plan transactions with 100% protocol adherence","Reduced client escalations through root-cause analysis consistently surpassing SLA standards"],"achievements":["Extra Miler Award EXL: Recognised for exceptional ownership and going beyond role scope to drive operational outcomes","Achievers Award SunLife: Ranked number 1 performer for 3 consecutive months exceeding quality benchmarks","50% TAT Reduction: Led RPA bot implementation reducing manual effort and rework by approximately 50%","Zero Missed SLA: Maintained 100% SLA compliance at Genpact with no missed deliverables"]}\nNow tailor this specifically to the JD provided. Keep same JSON structure. 100% correct spelling.',
       user: `RESUME:\n${resume}\n\nJD:\n${jd}`,
       max: 2500
     });
